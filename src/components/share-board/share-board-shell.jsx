@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { EnterpriseNavbar } from "@/components/navigation/enterprise-navbar";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
-import { TopBar } from "@/components/share-board/top-bar";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
 import {
   currentUser,
@@ -143,10 +143,7 @@ export function ShareBoardShell() {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-[1480px] flex-col gap-6">
-        <TopBar
-          onlineCount={onlineUsers.length + 1}
-          onQuickUpload={handleQuickUpload}
-        />
+        <EnterpriseNavbar />
 
         <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
