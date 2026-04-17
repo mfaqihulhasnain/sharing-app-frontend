@@ -1,7 +1,6 @@
-import { Check, ChevronDown, RotateCcw, UserRound, Wifi } from "lucide-react";
+import { Check, UserRound, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,24 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn, getAudienceLabel, getInitials } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 
 export function UsersSidebar({
   currentUser,
   users,
   selectedUserIds,
   onToggleUser,
-  onClearSelection,
-  peopleById,
 }) {
-  const hasSelection = selectedUserIds.length > 0;
-  const selectedAudienceLabel = getAudienceLabel(selectedUserIds, peopleById);
-
-  const scrollToUsersList = () => {
-    const list = document.getElementById("online-users-list");
-    list?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  };
-
   return (
     <div className="space-y-3.5 xl:sticky xl:top-20">
       <Card className="rounded-2xl border-line/90 bg-card-strong">
@@ -136,67 +125,6 @@ export function UsersSidebar({
                 </motion.button>
               );
             })}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border-line/90 bg-card-strong">
-        <CardHeader className="gap-2 p-4 pb-2">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-sm">Audience</CardTitle>
-            {hasSelection && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearSelection}
-                className="h-7 px-2 text-xs"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Clear
-              </Button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={scrollToUsersList}
-            className="group flex w-full items-center justify-between rounded-xl border border-line bg-card-muted px-3 py-2 text-left transition hover:border-accent-border hover:bg-soft-blue/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
-          >
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted">
-                Current visibility
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                {selectedAudienceLabel}
-              </p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted transition group-hover:text-foreground" />
-          </button>
-        </CardHeader>
-
-        <CardContent className="space-y-2 px-4 pb-4 pt-0">
-          <p className="text-xs leading-5 text-muted">
-            Pick people from the live list above to set who can view the next share.
-          </p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              variant={hasSelection ? "outline" : "subtle"}
-              className="h-7 px-2.5 text-xs"
-              onClick={onClearSelection}
-            >
-              Everyone
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2.5 text-xs"
-              onClick={scrollToUsersList}
-            >
-              Choose people
-            </Button>
           </div>
         </CardContent>
       </Card>

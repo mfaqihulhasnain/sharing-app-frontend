@@ -173,8 +173,6 @@ export function ShareBoardShell() {
               users={onlineUsers}
               selectedUserIds={selectedUserIds}
               onToggleUser={toggleUser}
-              onClearSelection={() => setSelectedUserIds([])}
-              peopleById={peopleById}
             />
           </aside>
         </main>
