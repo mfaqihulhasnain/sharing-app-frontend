@@ -136,7 +136,7 @@ export function ShareComposer({
             }}
             placeholder="Share an update, note, or file handoff..."
             aria-label="Message and file note composer"
-            className="min-h-[86px] rounded-xl border-line/90 bg-card/95 px-3.5 py-2.5 text-sm leading-6 shadow-none transition-[min-height,border-color,box-shadow] duration-150 focus:min-h-[132px] focus-visible:ring-2 focus-visible:ring-accent/15"
+            className="min-h-[86px] rounded-xl border-line/90 bg-card/95 px-3.5 py-2.5 text-sm leading-6 shadow-none transition-[border-color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-accent/15"
           />
 
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line/80 px-1 pt-2">
