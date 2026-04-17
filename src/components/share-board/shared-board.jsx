@@ -5,7 +5,7 @@ import { ShareItemCard } from "@/components/share-board/share-item-card";
 
 export function SharedBoard({ items, peopleById }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       <Card className="rounded-[30px] border-line bg-card-strong px-6 py-5">
         <CardHeader className="gap-1 p-0">
           <CardTitle className="text-xl">Shared board</CardTitle>
@@ -18,7 +18,7 @@ export function SharedBoard({ items, peopleById }) {
       {items.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <AnimatePresence initial={false}>
             {items.map((item) => {
               const person = peopleById[item.senderId];
@@ -41,7 +41,11 @@ export function SharedBoard({ items, peopleById }) {
                   exit={{ opacity: 0, y: -18 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
                 >
-                  <ShareItemCard item={normalizedItem} person={person} />
+                  <ShareItemCard
+                    item={normalizedItem}
+                    person={person}
+                    peopleById={peopleById}
+                  />
                 </motion.div>
               );
             })}
