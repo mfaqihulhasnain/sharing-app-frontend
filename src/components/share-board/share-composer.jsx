@@ -146,6 +146,7 @@ function getAttachmentVisual(kind) {
   if (kind === "image") {
     return {
       Icon: FileImage,
+      tileLabel: "",
       tileClass: "border-sky-200 bg-sky-100 text-sky-700",
       metaChipClass: "bg-sky-100 text-sky-700",
     };
@@ -154,6 +155,7 @@ function getAttachmentVisual(kind) {
   if (kind === "video") {
     return {
       Icon: FileVideo,
+      tileLabel: "",
       tileClass: "border-violet-200 bg-violet-100 text-violet-700",
       metaChipClass: "bg-violet-100 text-violet-700",
     };
@@ -161,8 +163,9 @@ function getAttachmentVisual(kind) {
 
   if (kind === "pdf") {
     return {
-      Icon: FileText,
-      tileClass: "border-rose-200 bg-rose-100 text-rose-700",
+      Icon: null,
+      tileLabel: "PDF",
+      tileClass: "border-rose-500 bg-rose-600 text-white",
       metaChipClass: "bg-rose-100 text-rose-700",
     };
   }
@@ -170,6 +173,7 @@ function getAttachmentVisual(kind) {
   if (kind === "doc") {
     return {
       Icon: FileText,
+      tileLabel: "",
       tileClass: "border-blue-200 bg-blue-100 text-blue-700",
       metaChipClass: "bg-blue-100 text-blue-700",
     };
@@ -178,6 +182,7 @@ function getAttachmentVisual(kind) {
   if (kind === "sheet") {
     return {
       Icon: FileSpreadsheet,
+      tileLabel: "",
       tileClass: "border-emerald-200 bg-emerald-100 text-emerald-700",
       metaChipClass: "bg-emerald-100 text-emerald-700",
     };
@@ -186,6 +191,7 @@ function getAttachmentVisual(kind) {
   if (kind === "slide") {
     return {
       Icon: FileText,
+      tileLabel: "",
       tileClass: "border-orange-200 bg-orange-100 text-orange-700",
       metaChipClass: "bg-orange-100 text-orange-700",
     };
@@ -194,6 +200,7 @@ function getAttachmentVisual(kind) {
   if (kind === "archive") {
     return {
       Icon: FileArchive,
+      tileLabel: "",
       tileClass: "border-amber-200 bg-amber-100 text-amber-700",
       metaChipClass: "bg-amber-100 text-amber-700",
     };
@@ -201,6 +208,7 @@ function getAttachmentVisual(kind) {
 
   return {
     Icon: FileText,
+    tileLabel: "",
     tileClass: "border-slate-200 bg-slate-100 text-slate-700",
     metaChipClass: "bg-slate-200 text-slate-600",
   };
@@ -446,7 +454,8 @@ export function ShareComposer({
                   const kind = getAttachmentKind(file);
                   const extension = getAttachmentExtension(file.name);
                   const typeLabel = getAttachmentTypeLabel(kind, extension);
-                  const { Icon, tileClass, metaChipClass } = getAttachmentVisual(kind);
+                  const { Icon, tileLabel, tileClass, metaChipClass } =
+                    getAttachmentVisual(kind);
                   const imagePreviewSrc = file.id
                     ? imagePreviewSources.previewById[file.id]
                     : "";
@@ -480,7 +489,13 @@ export function ShareComposer({
                             tileClass,
                           )}
                         >
-                          <Icon className="h-4.5 w-4.5" />
+                          {tileLabel ? (
+                            <span className="text-[11px] font-bold tracking-[0.06em]">
+                              {tileLabel}
+                            </span>
+                          ) : (
+                            <Icon className="h-4.5 w-4.5" />
+                          )}
                         </div>
                       )}
 
