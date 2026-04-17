@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  FileArchive,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
   Paperclip,
   SendHorizonal,
   Trash2,
@@ -21,6 +26,52 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { SelectedUsersChips } from "@/components/share-board/selected-users-chips";
 import { cn, formatFileSize, getAudienceLabel, getFileExtension } from "@/lib/utils";
+
+function getAttachmentVisual(file) {
+  const mimeType = file.type || "";
+  const extension = getFileExtension(file.name).toLowerCase();
+
+  if (mimeType.startsWith("image/")) {
+    return {
+      Icon: FileImage,
+      iconTone: "bg-sky-100 text-sky-600",
+    };
+  }
+
+  if (mimeType.startsWith("video/")) {
+    return {
+      Icon: FileVideo,
+      iconTone: "bg-violet-100 text-violet-600",
+    };
+  }
+
+  if (
+    mimeType.includes("sheet") ||
+    mimeType.includes("excel") ||
+    ["xls", "xlsx", "csv"].includes(extension)
+  ) {
+    return {
+      Icon: FileSpreadsheet,
+      iconTone: "bg-emerald-100 text-emerald-700",
+    };
+  }
+
+  if (
+    mimeType.includes("zip") ||
+    mimeType.includes("archive") ||
+    ["zip", "rar", "7z", "tar", "gz"].includes(extension)
+  ) {
+    return {
+      Icon: FileArchive,
+      iconTone: "bg-amber-100 text-amber-700",
+    };
+  }
+
+  return {
+    Icon: FileText,
+    iconTone: "bg-slate-200 text-slate-600",
+  };
+}
 
 export function ShareComposer({
   draftText,
@@ -44,6 +95,21 @@ export function ShareComposer({
     (total, file) => total + file.size,
     0,
   );
+
+  const handleClearAllFiles = () => {
+    if (!attachments.length) {
+      return;
+    }
+
+    if (
+      attachments.length > 1 &&
+      !window.confirm("Remove all attached files?")
+    ) {
+      return;
+    }
+
+    onClearFiles();
+  };
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     multiple: true,
@@ -178,58 +244,76 @@ export function ShareComposer({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="space-y-2"
+              className="space-y-1.5 pt-0.5"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-medium text-foreground">Attached files</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted">
-                    {attachments.length} file{attachments.length === 1 ? "" : "s"} -{" "}
-                    {formatFileSize(totalAttachmentSize)}
+                <p className="text-[11px] font-medium text-muted">Attached files</p>
+                <div className="flex items-center gap-3">
+                  <p className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+                    <span>
+                      {attachments.length} file
+                      {attachments.length === 1 ? "" : "s"}
+                    </span>
+                    <span aria-hidden>&bull;</span>
+                    <span>{formatFileSize(totalAttachmentSize)}</span>
                   </p>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={onClearFiles}
-                    className="h-7 px-2 text-xs"
+                    onClick={handleClearAllFiles}
+                    className="h-6 rounded-md px-1.5 text-[11px] text-muted hover:text-foreground"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3 w-3" />
                     Clear files
                   </Button>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                {attachments.map((file) => (
-                  <motion.div
-                    key={file.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    className="flex items-center gap-2.5 rounded-lg border border-line/80 bg-card/92 px-2.5 py-2"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-soft-blue text-[10px] font-semibold text-accent">
-                      {getFileExtension(file.name)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-foreground">
-                        {file.name}
-                      </p>
-                      <p className="text-[11px] text-muted">
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveFile(file.id)}
-                      className="rounded-md p-1 text-muted transition hover:bg-card-muted hover:text-foreground"
-                      aria-label={`Remove ${file.name}`}
+              <div className="space-y-1">
+                {attachments.map((file) => {
+                  const { Icon, iconTone } = getAttachmentVisual(file);
+                  const extension = getFileExtension(file.name);
+
+                  return (
+                    <motion.div
+                      key={file.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      className="flex items-center gap-2 rounded-md bg-card-muted/45 px-2.5 py-1.5 transition duration-150 hover:bg-card-muted/70"
                     >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </motion.div>
-                ))}
+                      <div
+                        className={cn(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                          iconTone,
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+
+                      <div className="min-w-0 flex flex-1 items-center gap-2">
+                        <p className="truncate text-[13px] font-medium leading-5 text-foreground">
+                          {file.name}
+                        </p>
+                        <span className="shrink-0 text-[10.5px] text-muted">
+                          {formatFileSize(file.size)}
+                        </span>
+                        <span className="hidden shrink-0 text-[10px] uppercase tracking-wide text-muted sm:inline">
+                          {extension}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveFile(file.id)}
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted transition duration-150 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.div>
           )}
