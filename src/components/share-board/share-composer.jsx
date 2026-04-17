@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import {
   FileArchive,
   FileImage,
@@ -27,49 +28,181 @@ import { Textarea } from "@/components/ui/textarea";
 import { SelectedUsersChips } from "@/components/share-board/selected-users-chips";
 import { cn, formatFileSize, getAudienceLabel, getFileExtension } from "@/lib/utils";
 
-function getAttachmentVisual(file) {
-  const mimeType = file.type || "";
-  const extension = getFileExtension(file.name).toLowerCase();
+const IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "gif",
+  "jfif",
+  "svg",
+]);
+const PDF_EXTENSIONS = new Set(["pdf"]);
+const DOC_EXTENSIONS = new Set(["doc", "docx", "odt", "rtf"]);
+const SHEET_EXTENSIONS = new Set(["xls", "xlsx", "csv", "ods"]);
+const SLIDE_EXTENSIONS = new Set(["ppt", "pptx", "odp", "key"]);
+const ARCHIVE_EXTENSIONS = new Set(["zip", "rar", "7z", "tar", "gz", "bz2"]);
+const TEXT_EXTENSIONS = new Set(["txt", "md", "json", "xml", "yml", "yaml", "log"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "avi", "mkv", "webm"]);
 
-  if (mimeType.startsWith("image/")) {
-    return {
-      Icon: FileImage,
-      iconTone: "bg-sky-100 text-sky-600",
-    };
+function getAttachmentMimeType(file = {}) {
+  return (file.type || file.mimeType || "").toLowerCase();
+}
+
+function getAttachmentExtension(name = "") {
+  return getFileExtension(name).toLowerCase();
+}
+
+function getAttachmentKind(file) {
+  const mimeType = getAttachmentMimeType(file);
+  const extension = getAttachmentExtension(file.name);
+
+  if (mimeType.startsWith("image/") || IMAGE_EXTENSIONS.has(extension)) {
+    return "image";
   }
 
-  if (mimeType.startsWith("video/")) {
-    return {
-      Icon: FileVideo,
-      iconTone: "bg-violet-100 text-violet-600",
-    };
+  if (mimeType.startsWith("video/") || VIDEO_EXTENSIONS.has(extension)) {
+    return "video";
+  }
+
+  if (mimeType.includes("pdf") || PDF_EXTENSIONS.has(extension)) {
+    return "pdf";
+  }
+
+  if (
+    mimeType.includes("word") ||
+    mimeType.includes("document") ||
+    DOC_EXTENSIONS.has(extension)
+  ) {
+    return "doc";
   }
 
   if (
     mimeType.includes("sheet") ||
     mimeType.includes("excel") ||
-    ["xls", "xlsx", "csv"].includes(extension)
+    SHEET_EXTENSIONS.has(extension)
   ) {
-    return {
-      Icon: FileSpreadsheet,
-      iconTone: "bg-emerald-100 text-emerald-700",
-    };
+    return "sheet";
   }
 
   if (
-    mimeType.includes("zip") ||
-    mimeType.includes("archive") ||
-    ["zip", "rar", "7z", "tar", "gz"].includes(extension)
+    mimeType.includes("presentation") ||
+    mimeType.includes("powerpoint") ||
+    SLIDE_EXTENSIONS.has(extension)
   ) {
+    return "slide";
+  }
+
+  if (mimeType.includes("zip") || mimeType.includes("archive") || ARCHIVE_EXTENSIONS.has(extension)) {
+    return "archive";
+  }
+
+  if (mimeType.startsWith("text/") || TEXT_EXTENSIONS.has(extension)) {
+    return "text";
+  }
+
+  return "generic";
+}
+
+function getAttachmentTypeLabel(kind, extension) {
+  const upperExtension = extension?.toUpperCase();
+
+  if (kind === "pdf") {
+    return "PDF";
+  }
+
+  if (kind === "doc") {
+    return "DOC";
+  }
+
+  if (kind === "sheet") {
+    return "XLS";
+  }
+
+  if (kind === "slide") {
+    return "PPT";
+  }
+
+  if (kind === "archive") {
+    return "ZIP";
+  }
+
+  if (kind === "text") {
+    return "TXT";
+  }
+
+  if (kind === "image") {
+    return upperExtension || "IMG";
+  }
+
+  if (kind === "video") {
+    return upperExtension || "VID";
+  }
+
+  return upperExtension || "FILE";
+}
+
+function getAttachmentVisual(kind) {
+  if (kind === "image") {
+    return {
+      Icon: FileImage,
+      tileClass: "border-sky-200 bg-sky-100 text-sky-700",
+      metaChipClass: "bg-sky-100 text-sky-700",
+    };
+  }
+
+  if (kind === "video") {
+    return {
+      Icon: FileVideo,
+      tileClass: "border-violet-200 bg-violet-100 text-violet-700",
+      metaChipClass: "bg-violet-100 text-violet-700",
+    };
+  }
+
+  if (kind === "pdf") {
+    return {
+      Icon: FileText,
+      tileClass: "border-rose-200 bg-rose-100 text-rose-700",
+      metaChipClass: "bg-rose-100 text-rose-700",
+    };
+  }
+
+  if (kind === "doc") {
+    return {
+      Icon: FileText,
+      tileClass: "border-blue-200 bg-blue-100 text-blue-700",
+      metaChipClass: "bg-blue-100 text-blue-700",
+    };
+  }
+
+  if (kind === "sheet") {
+    return {
+      Icon: FileSpreadsheet,
+      tileClass: "border-emerald-200 bg-emerald-100 text-emerald-700",
+      metaChipClass: "bg-emerald-100 text-emerald-700",
+    };
+  }
+
+  if (kind === "slide") {
+    return {
+      Icon: FileText,
+      tileClass: "border-orange-200 bg-orange-100 text-orange-700",
+      metaChipClass: "bg-orange-100 text-orange-700",
+    };
+  }
+
+  if (kind === "archive") {
     return {
       Icon: FileArchive,
-      iconTone: "bg-amber-100 text-amber-700",
+      tileClass: "border-amber-200 bg-amber-100 text-amber-700",
+      metaChipClass: "bg-amber-100 text-amber-700",
     };
   }
 
   return {
     Icon: FileText,
-    iconTone: "bg-slate-200 text-slate-600",
+    tileClass: "border-slate-200 bg-slate-100 text-slate-700",
+    metaChipClass: "bg-slate-200 text-slate-600",
   };
 }
 
@@ -95,6 +228,45 @@ export function ShareComposer({
     (total, file) => total + file.size,
     0,
   );
+
+  const imagePreviewSources = useMemo(() => {
+    const previewById = {};
+    const objectUrls = [];
+
+    attachments.forEach((file) => {
+      if (getAttachmentKind(file) !== "image" || !file.id) {
+        return;
+      }
+
+      // Future backend integration can pass a persistent preview URL directly.
+      const directPreviewUrl =
+        file.previewUrl || file.previewSrc || file.url || file.downloadUrl;
+      if (typeof directPreviewUrl === "string" && directPreviewUrl.length > 0) {
+        previewById[file.id] = directPreviewUrl;
+        return;
+      }
+
+      const sourceBlob = file.sourceFile || file.file;
+      if (sourceBlob instanceof Blob) {
+        const objectUrl = URL.createObjectURL(sourceBlob);
+        objectUrls.push(objectUrl);
+        previewById[file.id] = objectUrl;
+      }
+    });
+
+    return {
+      previewById,
+      objectUrls,
+    };
+  }, [attachments]);
+
+  useEffect(() => {
+    return () => {
+      imagePreviewSources.objectUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [imagePreviewSources]);
 
   const handleClearAllFiles = () => {
     if (!attachments.length) {
@@ -269,10 +441,16 @@ export function ShareComposer({
                   </Button>
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {attachments.map((file) => {
-                  const { Icon, iconTone } = getAttachmentVisual(file);
-                  const extension = getFileExtension(file.name);
+                  const kind = getAttachmentKind(file);
+                  const extension = getAttachmentExtension(file.name);
+                  const typeLabel = getAttachmentTypeLabel(kind, extension);
+                  const { Icon, tileClass, metaChipClass } = getAttachmentVisual(kind);
+                  const imagePreviewSrc = file.id
+                    ? imagePreviewSources.previewById[file.id]
+                    : "";
+                  const hasImagePreview = kind === "image" && Boolean(imagePreviewSrc);
 
                   return (
                     <motion.div
@@ -281,35 +459,57 @@ export function ShareComposer({
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      className="flex items-center gap-2 rounded-md bg-card-muted/45 px-2.5 py-1.5 transition duration-150 hover:bg-card-muted/70"
+                      className="group flex w-full max-w-full items-center gap-2.5 rounded-lg border border-line/75 bg-card-muted/40 px-2.5 py-2 transition duration-150 hover:border-line hover:bg-card-muted/65 sm:max-w-[34rem]"
                     >
-                      <div
-                        className={cn(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-                          iconTone,
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                      </div>
+                      {hasImagePreview ? (
+                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-line/70 bg-card">
+                          <Image
+                            src={imagePreviewSrc}
+                            alt={file.name}
+                            width={44}
+                            height={44}
+                            sizes="44px"
+                            unoptimized
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-md border",
+                            tileClass,
+                          )}
+                        >
+                          <Icon className="h-4.5 w-4.5" />
+                        </div>
+                      )}
 
-                      <div className="min-w-0 flex flex-1 items-center gap-2">
+                      <div className="min-w-0 flex flex-1 flex-col gap-0.5">
                         <p className="truncate text-[13px] font-medium leading-5 text-foreground">
                           {file.name}
                         </p>
-                        <span className="shrink-0 text-[10.5px] text-muted">
-                          {formatFileSize(file.size)}
-                        </span>
-                        <span className="hidden shrink-0 text-[10px] uppercase tracking-wide text-muted sm:inline">
-                          {extension}
-                        </span>
+                        <div className="flex items-center gap-1.5 text-[10.5px] text-muted">
+                          <span>{formatFileSize(file.size)}</span>
+                          <span aria-hidden>&bull;</span>
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide",
+                              metaChipClass,
+                            )}
+                          >
+                            {typeLabel}
+                          </span>
+                        </div>
                       </div>
+
                       <button
                         type="button"
                         onClick={() => onRemoveFile(file.id)}
-                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted transition duration-150 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted transition duration-150 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                         aria-label={`Remove ${file.name}`}
+                        title={`Remove ${file.name}`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </motion.div>
                   );
