@@ -1,11 +1,11 @@
-import { PanelTopOpen, Sparkles, SunMoon, UsersRound } from "lucide-react";
+import { PanelTopOpen, Settings2, Sparkles, UsersRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/share-board/status-badge";
 
-export function TopBar({ onlineCount, onQuickUpload, onThemeToggle }) {
+export function TopBar({ onlineCount, onQuickUpload }) {
   return (
     <Card className="sticky top-4 z-20 rounded-[30px] border-line bg-card-strong px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -50,10 +50,9 @@ export function TopBar({ onlineCount, onQuickUpload, onThemeToggle }) {
             <Button
               size="icon"
               variant="outline"
-              aria-label="Toggle theme"
-              onClick={onThemeToggle}
+              aria-label="Settings placeholder"
             >
-              <SunMoon className="h-4 w-4" />
+              <Settings2 className="h-4 w-4" />
             </Button>
           </div>
         </div>

@@ -7,7 +7,7 @@ export function AppToaster() {
     <Toaster
       position="top-center"
       richColors
-      theme="system"
+      theme="light"
       closeButton
       toastOptions={{
         classNames: {

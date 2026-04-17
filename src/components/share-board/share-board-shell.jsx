@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
@@ -13,8 +13,6 @@ import {
   peopleById,
 } from "@/lib/mock-data";
 import { canUserSeeShare } from "@/lib/utils";
-
-const THEME_STORAGE_KEY = "sharing-board-theme";
 
 function createAttachmentRecord(file) {
   return {
@@ -33,21 +31,6 @@ function wait(ms) {
 }
 
 export function ShareBoardShell() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") {
-      return "light";
-    }
-
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-
-    if (storedTheme === "dark" || storedTheme === "light") {
-      return storedTheme;
-    }
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  });
   const [shares, setShares] = useState(initialShares);
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -138,18 +121,9 @@ export function ShareBoardShell() {
     uploadTriggerRef.current?.();
   };
 
-  const handleThemeToggle = () => {
-    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
-  };
-
   const registerUploadTrigger = (open) => {
     uploadTriggerRef.current = open;
   };
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
 
   return (
     <div className="relative min-h-screen overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
@@ -172,7 +146,6 @@ export function ShareBoardShell() {
         <TopBar
           onlineCount={onlineUsers.length + 1}
           onQuickUpload={handleQuickUpload}
-          onThemeToggle={handleThemeToggle}
         />
 
         <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
