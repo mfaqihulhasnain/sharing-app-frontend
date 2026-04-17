@@ -13,7 +13,7 @@ export function SelectedUsersChips({
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-full border border-dashed border-line bg-white/65 px-4 py-2 text-sm text-muted",
+          "flex items-center gap-2 rounded-full border border-dashed border-line bg-card-muted px-4 py-2 text-sm text-muted",
           className,
         )}
       >
@@ -36,7 +36,7 @@ export function SelectedUsersChips({
             exit={{ opacity: 0, scale: 0.92 }}
             type="button"
             onClick={() => onRemoveUser(user.id)}
-            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-soft-blue px-3 py-1.5 text-sm font-medium text-accent transition hover:bg-soft-blue/80"
+            className="inline-flex items-center gap-2 rounded-full border border-accent-border bg-soft-blue px-3 py-1.5 text-sm font-medium text-accent transition hover:bg-soft-blue/80"
           >
             <span>{user.name}</span>
             <X className="h-3.5 w-3.5" />

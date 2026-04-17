@@ -31,6 +31,12 @@ export function ShareComposer({
   isSharing,
   registerUploadTrigger,
 }) {
+  const hasShareContent = draftText.trim().length > 0 || attachments.length > 0;
+  const totalAttachmentSize = attachments.reduce(
+    (total, file) => total + file.size,
+    0,
+  );
+
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     multiple: true,
     noClick: true,
@@ -60,11 +66,11 @@ export function ShareComposer({
     <Card
       id="share-composer"
       className={cn(
-        "relative overflow-hidden rounded-[32px] border-white/80 bg-card-strong/92",
+        "relative overflow-hidden rounded-[32px] border-line bg-card-strong",
         isDragActive && "ring-4 ring-accent/10",
       )}
     >
-      <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[radial-gradient(circle,_rgba(95,203,255,0.16),_transparent_68%)]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[radial-gradient(circle,_var(--accent-soft),_transparent_70%)]" />
       <CardHeader className="relative gap-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
@@ -74,7 +80,7 @@ export function ShareComposer({
               item before you send it.
             </CardDescription>
           </div>
-          <div className="rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm text-muted">
+          <div className="rounded-2xl border border-line bg-card-muted px-4 py-3 text-sm text-muted">
             Audience:{" "}
             <span className="font-medium text-foreground">
               {getAudienceLabel(selectedUserIds, peopleById)}
@@ -93,7 +99,7 @@ export function ShareComposer({
         <div
           {...getRootProps()}
           className={cn(
-            "rounded-[28px] border border-dashed border-line/90 bg-white/58 p-3 transition",
+            "rounded-[28px] border border-dashed border-line bg-card-muted p-3 transition",
             isDragActive && "border-accent bg-soft-blue",
           )}
         >
@@ -101,15 +107,25 @@ export function ShareComposer({
           <Textarea
             value={draftText}
             onChange={(event) => onDraftTextChange(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+                event.preventDefault();
+                if (hasShareContent && !isSharing) {
+                  onSubmit();
+                }
+              }
+            }}
             placeholder="Drop a quick update, a checklist, or a file handoff note here."
+            aria-label="Message and file note composer"
           />
 
-          <div className="mt-3 flex flex-col gap-3 border-t border-line/70 px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted">
+          <div className="mt-3 flex flex-col gap-3 border-t border-line px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               <UploadCloud className="h-4 w-4 text-accent" />
               {isDragActive
                 ? "Release to add files to this board post."
-                : "Drag files here or use attach to add them to the same board flow."}
+                : "Drag files here or use attach to add them to the same board flow."}{" "}
+              <span className="text-muted-soft">Ctrl/Cmd + Enter to share</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -125,7 +141,7 @@ export function ShareComposer({
                 type="button"
                 size="sm"
                 onClick={onSubmit}
-                disabled={isSharing}
+                disabled={isSharing || !hasShareContent}
               >
                 <SendHorizonal className="h-4 w-4" />
                 {isSharing ? "Sharing..." : "Share now"}
@@ -146,15 +162,21 @@ export function ShareComposer({
                 <p className="text-sm font-medium text-foreground">
                   Ready to share
                 </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClearFiles}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear files
-                </Button>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted">
+                    {attachments.length} file{attachments.length === 1 ? "" : "s"} -{" "}
+                    {formatFileSize(totalAttachmentSize)}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClearFiles}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear files
+                  </Button>
+                </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {attachments.map((file) => (
@@ -164,7 +186,7 @@ export function ShareComposer({
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
-                    className="flex items-start gap-3 rounded-[22px] border border-line bg-white/78 p-4 shadow-sm"
+                    className="flex items-start gap-3 rounded-[22px] border border-line bg-card p-4 shadow-sm"
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-soft-blue text-sm font-semibold text-accent">
                       {getFileExtension(file.name)}
@@ -180,7 +202,7 @@ export function ShareComposer({
                     <button
                       type="button"
                       onClick={() => onRemoveFile(file.id)}
-                      className="rounded-full p-1.5 text-muted transition hover:bg-zinc-100 hover:text-foreground"
+                      className="rounded-full p-1.5 text-muted transition hover:bg-card-muted hover:text-foreground"
                       aria-label={`Remove ${file.name}`}
                     >
                       <X className="h-4 w-4" />

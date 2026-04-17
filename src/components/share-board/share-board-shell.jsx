@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
@@ -13,6 +13,8 @@ import {
   peopleById,
 } from "@/lib/mock-data";
 import { canUserSeeShare } from "@/lib/utils";
+
+const THEME_STORAGE_KEY = "sharing-board-theme";
 
 function createAttachmentRecord(file) {
   return {
@@ -31,6 +33,21 @@ function wait(ms) {
 }
 
 export function ShareBoardShell() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+    if (storedTheme === "dark" || storedTheme === "light") {
+      return storedTheme;
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  });
   const [shares, setShares] = useState(initialShares);
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -85,36 +102,22 @@ export function ShareBoardShell() {
     const destinationNames = onlineUsers
       .filter((user) => audienceIds.includes(user.id))
       .map((user) => user.name);
-    const newEntries = [];
+    const newShare = {
+      id: `share-${createdAt}`,
+      senderId: currentUser.id,
+      createdAt,
+      audienceIds,
+      text: trimmedText,
+      files: attachments.map((file) => ({
+        id: file.id,
+        name: file.name,
+        size: file.size,
+        mimeType: file.type,
+        sourceFile: file.sourceFile,
+      })),
+    };
 
-    if (trimmedText) {
-      newEntries.push({
-        id: `share-${createdAt}-text`,
-        type: "text",
-        senderId: currentUser.id,
-        createdAt,
-        audienceIds,
-        text: trimmedText,
-      });
-    }
-
-    attachments.forEach((file, index) => {
-      newEntries.push({
-        id: `share-${createdAt}-file-${index}`,
-        type: "file",
-        senderId: currentUser.id,
-        createdAt,
-        audienceIds,
-        file: {
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-          sourceFile: file.sourceFile,
-        },
-      });
-    });
-
-    setShares((currentShares) => [...newEntries, ...currentShares]);
+    setShares((currentShares) => [newShare, ...currentShares]);
     setDraftText("");
     setAttachments([]);
     setSelectedUserIds([]);
@@ -126,9 +129,7 @@ export function ShareBoardShell() {
         : destinationNames.join(", ");
 
     toast.success(
-      newEntries.length === 1
-        ? `Shared with ${destinationLabel}`
-        : `${newEntries.length} items shared with ${destinationLabel}`,
+      `Shared with ${destinationLabel}`,
     );
   };
 
@@ -137,22 +138,41 @@ export function ShareBoardShell() {
     uploadTriggerRef.current?.();
   };
 
+  const handleThemeToggle = () => {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  };
+
   const registerUploadTrigger = (open) => {
     uploadTriggerRef.current = open;
   };
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
   return (
     <div className="relative min-h-screen overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-28 h-72 w-72 rounded-full bg-sky-300/18 blur-3xl" />
-        <div className="absolute right-[-6rem] top-40 h-72 w-72 rounded-full bg-emerald-200/22 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-blue-200/16 blur-3xl" />
+        <div
+          className="absolute left-[-8rem] top-28 h-72 w-72 rounded-full blur-3xl"
+          style={{ background: "var(--bg-orb-1)" }}
+        />
+        <div
+          className="absolute right-[-6rem] top-40 h-72 w-72 rounded-full blur-3xl"
+          style={{ background: "var(--bg-orb-2)" }}
+        />
+        <div
+          className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl"
+          style={{ background: "var(--bg-orb-3)" }}
+        />
       </div>
 
       <div className="relative mx-auto flex w-full max-w-[1480px] flex-col gap-6">
         <TopBar
           onlineCount={onlineUsers.length + 1}
           onQuickUpload={handleQuickUpload}
+          onThemeToggle={handleThemeToggle}
         />
 
         <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">

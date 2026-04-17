@@ -59,7 +59,7 @@ export function FileItemCard({ item, person }) {
 
   return (
     <BoardItemCard item={item} person={person}>
-      <div className="flex flex-col gap-4 rounded-[24px] bg-white/76 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-[24px] bg-card-muted p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[22px] bg-soft-blue text-accent shadow-sm">
             {iconKind === "image" && <FileImage className="h-6 w-6" />}

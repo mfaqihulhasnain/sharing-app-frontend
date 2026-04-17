@@ -15,7 +15,7 @@ export function TextItemCard({ item, person }) {
 
   return (
     <BoardItemCard item={item} person={person}>
-      <div className="rounded-[24px] bg-white/76 p-5 shadow-sm">
+      <div className="rounded-[24px] bg-card-muted p-5 shadow-sm">
         <p className="whitespace-pre-wrap text-[15px] leading-7 text-foreground/95">
           {item.text}
         </p>

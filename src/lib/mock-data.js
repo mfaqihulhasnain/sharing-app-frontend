@@ -54,62 +54,68 @@ export const peopleById = people.reduce((accumulator, person) => {
 export const initialShares = [
   {
     id: "share-1",
-    type: "text",
     senderId: "ali",
     createdAt: "2026-04-16T09:14:00+05:00",
     audienceIds: [],
-    text: "Morning update: drop any files or notes for today’s Wi-Fi handoff here so the whole room can stay aligned.",
+    text: "Morning update: drop any files or notes for today's Wi-Fi handoff here so the whole room can stay aligned.",
+    files: [],
   },
   {
     id: "share-2",
-    type: "file",
     senderId: "sara",
     createdAt: "2026-04-16T09:42:00+05:00",
     audienceIds: ["you", "maya"],
-    file: {
-      name: "floor-plan-v3.pdf",
-      size: 2489000,
-      mimeType: "application/pdf",
-    },
+    text: "Latest floor plan attached for Maya and this device.",
+    files: [
+      {
+        name: "floor-plan-v3.pdf",
+        size: 2489000,
+        mimeType: "application/pdf",
+      },
+    ],
   },
   {
     id: "share-3",
-    type: "text",
     senderId: "maya",
     createdAt: "2026-04-16T10:03:00+05:00",
     audienceIds: [],
     text: "Fresh signage ideas are ready. If anyone prints samples locally, place the exports here instead of sending them around one by one.",
+    files: [],
   },
   {
     id: "share-4",
-    type: "file",
     senderId: "noah",
     createdAt: "2026-04-16T10:37:00+05:00",
     audienceIds: ["you"],
-    file: {
-      name: "handoff-checklist.xlsx",
-      size: 896000,
-      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    },
+    text: "",
+    files: [
+      {
+        name: "handoff-checklist.xlsx",
+        size: 896000,
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    ],
   },
   {
     id: "share-5",
-    type: "file",
     senderId: "ahmed",
     createdAt: "2026-04-16T11:08:00+05:00",
     audienceIds: [],
-    file: {
-      name: "printer-drivers.zip",
-      size: 12640000,
-      mimeType: "application/zip",
-    },
+    text: "",
+    files: [
+      {
+        name: "printer-drivers.zip",
+        size: 12640000,
+        mimeType: "application/zip",
+      },
+    ],
   },
   {
     id: "share-6",
-    type: "text",
     senderId: "sara",
     createdAt: "2026-04-16T11:26:00+05:00",
     audienceIds: ["ali", "ahmed"],
     text: "Quiet note for Ali and Ahmed: booth invoice copy is on the board for your review before noon.",
+    files: [],
   },
 ];

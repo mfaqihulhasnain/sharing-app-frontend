@@ -1,17 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/share-board/empty-state";
-import { FileItemCard } from "@/components/share-board/file-item-card";
-import { TextItemCard } from "@/components/share-board/text-item-card";
+import { ShareItemCard } from "@/components/share-board/share-item-card";
 
 export function SharedBoard({ items, peopleById }) {
   return (
     <div className="space-y-4">
-      <Card className="rounded-[30px] border-white/80 bg-card-strong/88 px-6 py-5">
+      <Card className="rounded-[30px] border-line bg-card-strong px-6 py-5">
         <CardHeader className="gap-1 p-0">
           <CardTitle className="text-xl">Shared board</CardTitle>
           <CardDescription>
-            One stream, one surface, and only the items you’re allowed to see.
+            One stream, one surface, and only the items you&apos;re allowed to see.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -23,6 +22,15 @@ export function SharedBoard({ items, peopleById }) {
           <AnimatePresence initial={false}>
             {items.map((item) => {
               const person = peopleById[item.senderId];
+              const normalizedItem = {
+                ...item,
+                text: typeof item.text === "string" ? item.text : "",
+                files: Array.isArray(item.files)
+                  ? item.files
+                  : item.file
+                    ? [item.file]
+                    : [],
+              };
 
               return (
                 <motion.div
@@ -33,11 +41,7 @@ export function SharedBoard({ items, peopleById }) {
                   exit={{ opacity: 0, y: -18 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
                 >
-                  {item.type === "file" ? (
-                    <FileItemCard item={item} person={person} />
-                  ) : (
-                    <TextItemCard item={item} person={person} />
-                  )}
+                  <ShareItemCard item={normalizedItem} person={person} />
                 </motion.div>
               );
             })}
@@ -47,3 +51,4 @@ export function SharedBoard({ items, peopleById }) {
     </div>
   );
 }
+

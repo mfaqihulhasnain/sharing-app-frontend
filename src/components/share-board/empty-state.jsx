@@ -2,7 +2,7 @@ import { LayoutGrid } from "lucide-react";
 
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-[30px] border border-dashed border-line bg-white/62 px-8 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-[30px] border border-dashed border-line bg-card-muted px-8 py-16 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-soft-blue text-accent">
         <LayoutGrid className="h-7 w-7" />
       </div>

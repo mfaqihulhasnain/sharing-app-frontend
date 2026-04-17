@@ -5,7 +5,7 @@ import { cn, formatTimestamp, getInitials } from "@/lib/utils";
 
 export function BoardItemCard({ item, person, children }) {
   return (
-    <Card className="rounded-[28px] border-white/80 bg-card-strong/92 p-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(36,59,89,0.12)] sm:p-6">
+    <Card className="rounded-[28px] border-line bg-card-strong p-5 transition duration-300 hover:-translate-y-0.5 sm:p-6">
       <div className="flex flex-col gap-5">
         <div className="flex items-start gap-4">
           <div

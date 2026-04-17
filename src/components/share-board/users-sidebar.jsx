@@ -23,7 +23,7 @@ export function UsersSidebar({
 
   return (
     <div className="space-y-5 xl:sticky xl:top-28">
-      <Card className="rounded-[30px] border-white/80 bg-card-strong/88">
+      <Card className="rounded-[30px] border-line bg-card-strong">
         <CardHeader className="gap-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -44,7 +44,7 @@ export function UsersSidebar({
               </Button>
             )}
           </div>
-          <div className="rounded-[24px] border border-line bg-white/72 p-4">
+          <div className="rounded-[24px] border border-line bg-card-muted p-4">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
               Current visibility
             </p>
@@ -58,7 +58,7 @@ export function UsersSidebar({
         </CardHeader>
       </Card>
 
-      <Card className="rounded-[30px] border-white/80 bg-card-strong/88">
+      <Card className="rounded-[30px] border-line bg-card-strong">
         <CardHeader className="gap-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -72,7 +72,7 @@ export function UsersSidebar({
         </CardHeader>
 
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-3 rounded-[24px] border border-line bg-white/72 p-4">
+          <div className="flex items-center gap-3 rounded-[24px] border border-line bg-card-muted p-4">
             <div
               className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-semibold text-white shadow-sm",
@@ -90,7 +90,7 @@ export function UsersSidebar({
               </div>
               <p className="text-sm text-muted">{currentUser.role}</p>
             </div>
-            <div className="inline-flex items-center gap-1 rounded-full bg-soft-emerald px-3 py-1 text-xs font-medium text-emerald-700">
+            <div className="inline-flex items-center gap-1 rounded-full border border-success-border bg-soft-emerald px-3 py-1 text-xs font-medium text-success-text">
               <Wifi className="h-3.5 w-3.5" />
               Live
             </div>
@@ -111,8 +111,8 @@ export function UsersSidebar({
                   className={cn(
                     "flex w-full items-center gap-3 rounded-[24px] border px-4 py-4 text-left transition",
                     isSelected
-                      ? "border-blue-200 bg-soft-blue shadow-sm"
-                      : "border-line bg-white/72 hover:bg-white/88",
+                      ? "border-accent-border bg-soft-blue shadow-sm"
+                      : "border-line bg-card-muted hover:bg-card",
                   )}
                 >
                   <div
@@ -131,13 +131,13 @@ export function UsersSidebar({
                       {isSelected && <Badge variant="accent">Selected</Badge>}
                     </div>
                     <p className="text-sm text-muted">{user.role}</p>
-                    <p className="text-xs text-muted/90">{user.presence}</p>
+                    <p className="text-xs text-muted">{user.presence}</p>
                   </div>
                   <div
                     className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-full border",
                       isSelected
-                        ? "border-blue-200 bg-white text-accent"
+                        ? "border-accent-border bg-card text-accent"
                         : "border-line bg-transparent text-muted",
                     )}
                   >

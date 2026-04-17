@@ -7,11 +7,11 @@ export function AppToaster() {
     <Toaster
       position="top-center"
       richColors
-      theme="light"
+      theme="system"
       closeButton
       toastOptions={{
         classNames: {
-          toast: "!rounded-2xl !border !border-line !bg-white !shadow-xl",
+          toast: "!rounded-2xl !border !border-line !bg-card !text-foreground !shadow-xl",
           title: "!text-sm !font-semibold !text-foreground",
           description: "!text-sm !text-muted",
         },
