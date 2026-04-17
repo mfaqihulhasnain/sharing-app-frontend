@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Paperclip, SendHorizonal, Trash2, UploadCloud, X } from "lucide-react";
+import {
+  Paperclip,
+  SendHorizonal,
+  Trash2,
+  UploadCloud,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,7 +36,8 @@ export function ShareComposer({
   onClearAudience,
   peopleById,
   isSharing,
-  registerUploadTrigger,
+  registerUploadTrigger = () => {},
+  onOpenAudience = () => {},
 }) {
   const hasShareContent = draftText.trim().length > 0 || attachments.length > 0;
   const totalAttachmentSize = attachments.reduce(
@@ -66,41 +74,52 @@ export function ShareComposer({
     <Card
       id="share-composer"
       className={cn(
-        "relative overflow-hidden rounded-[32px] border-line bg-card-strong",
-        isDragActive && "ring-4 ring-accent/10",
+        "relative overflow-hidden rounded-2xl border-line/90 bg-card-strong shadow-[0_12px_24px_rgba(15,23,42,0.04)]",
+        isDragActive && "ring-2 ring-accent/15",
       )}
     >
-      <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[radial-gradient(circle,_var(--accent-soft),_transparent_70%)]" />
-      <CardHeader className="relative gap-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-xl">Share to the board</CardTitle>
-            <CardDescription>
-              Post once, keep the board unified, and choose who can access the
-              item before you send it.
+      <div className="pointer-events-none absolute right-0 top-0 h-36 w-36 rounded-full bg-[radial-gradient(circle,_var(--accent-soft),_transparent_70%)]" />
+      <CardHeader className="relative gap-2 p-4 pb-2 sm:p-5 sm:pb-2">
+        <div className="flex flex-wrap items-start justify-between gap-2.5">
+          <div className="space-y-0.5">
+            <CardTitle className="text-base sm:text-[1.03rem]">
+              Share to the board
+            </CardTitle>
+            <CardDescription className="text-xs leading-5">
+              Post once, pick visibility, and keep everything in one shared flow.
             </CardDescription>
           </div>
-          <div className="rounded-2xl border border-line bg-card-muted px-4 py-3 text-sm text-muted">
-            Audience:{" "}
-            <span className="font-medium text-foreground">
-              {getAudienceLabel(selectedUserIds, peopleById)}
+
+          <button
+            type="button"
+            onClick={onOpenAudience}
+            className="group inline-flex items-center gap-1.5 rounded-full border border-line bg-card-muted px-3 py-1.5 text-xs text-muted transition hover:border-accent-border hover:bg-accent-soft/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+            aria-label="Open audience controls"
+          >
+            <UsersRound className="h-3.5 w-3.5 text-accent" />
+            <span>
+              Visible to{" "}
+              <span className="font-medium text-foreground">
+                {getAudienceLabel(selectedUserIds, peopleById)}
+              </span>
             </span>
-          </div>
+          </button>
         </div>
       </CardHeader>
 
-      <CardContent className="relative space-y-5">
+      <CardContent className="relative space-y-3 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
         <SelectedUsersChips
           selectedUsers={selectedUsers}
           onRemoveUser={onRemoveAudienceUser}
           onClear={onClearAudience}
+          className="min-h-8"
         />
 
         <div
           {...getRootProps()}
           className={cn(
-            "rounded-[28px] border border-dashed border-line bg-card-muted p-3 transition",
-            isDragActive && "border-accent bg-soft-blue",
+            "rounded-2xl border border-dashed border-line/80 bg-card-muted/65 p-2.5 transition-[border-color,background-color,box-shadow] duration-150",
+            isDragActive && "border-accent bg-soft-blue/70 shadow-sm",
           )}
         >
           <input {...getInputProps()} />
@@ -115,16 +134,17 @@ export function ShareComposer({
                 }
               }
             }}
-            placeholder="Drop a quick update, a checklist, or a file handoff note here."
+            placeholder="Share an update, note, or file handoff..."
             aria-label="Message and file note composer"
+            className="min-h-[86px] rounded-xl border-line/90 bg-card/95 px-3.5 py-2.5 text-sm leading-6 shadow-none transition-[min-height,border-color,box-shadow] duration-150 focus:min-h-[132px] focus-visible:ring-2 focus-visible:ring-accent/15"
           />
 
-          <div className="mt-3 flex flex-col gap-3 border-t border-line px-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-              <UploadCloud className="h-4 w-4 text-accent" />
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line/80 px-1 pt-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+              <UploadCloud className="h-3.5 w-3.5 text-accent" />
               {isDragActive
-                ? "Release to add files to this board post."
-                : "Drag files here or use attach to add them to the same board flow."}{" "}
+                ? "Release to add files."
+                : "Drag files here or use attach."}{" "}
               <span className="text-muted-soft">Ctrl/Cmd + Enter to share</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -133,17 +153,19 @@ export function ShareComposer({
                 variant="outline"
                 size="sm"
                 onClick={open}
+                className="h-8"
               >
-                <Paperclip className="h-4 w-4" />
-                Attach files
+                <Paperclip className="h-3.5 w-3.5" />
+                Attach
               </Button>
               <Button
                 type="button"
                 size="sm"
                 onClick={onSubmit}
                 disabled={isSharing || !hasShareContent}
+                className="h-8 px-3.5"
               >
-                <SendHorizonal className="h-4 w-4" />
+                <SendHorizonal className="h-3.5 w-3.5" />
                 {isSharing ? "Sharing..." : "Share now"}
               </Button>
             </div>
@@ -156,12 +178,10 @@ export function ShareComposer({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="space-y-3"
+              className="space-y-2"
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-foreground">
-                  Ready to share
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-medium text-foreground">Attached files</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-muted">
                     {attachments.length} file{attachments.length === 1 ? "" : "s"} -{" "}
@@ -172,13 +192,14 @@ export function ShareComposer({
                     variant="ghost"
                     size="sm"
                     onClick={onClearFiles}
+                    className="h-7 px-2 text-xs"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                     Clear files
                   </Button>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 {attachments.map((file) => (
                   <motion.div
                     key={file.id}
@@ -186,26 +207,26 @@ export function ShareComposer({
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
-                    className="flex items-start gap-3 rounded-[22px] border border-line bg-card p-4 shadow-sm"
+                    className="flex items-center gap-2.5 rounded-lg border border-line/80 bg-card/92 px-2.5 py-2"
                   >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-soft-blue text-sm font-semibold text-accent">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-soft-blue text-[10px] font-semibold text-accent">
                       {getFileExtension(file.name)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="truncate text-[13px] font-medium text-foreground">
                         {file.name}
                       </p>
-                      <p className="mt-1 text-xs text-muted">
+                      <p className="text-[11px] text-muted">
                         {formatFileSize(file.size)}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => onRemoveFile(file.id)}
-                      className="rounded-full p-1.5 text-muted transition hover:bg-card-muted hover:text-foreground"
+                      className="rounded-md p-1 text-muted transition hover:bg-card-muted hover:text-foreground"
                       aria-label={`Remove ${file.name}`}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </motion.div>
                 ))}

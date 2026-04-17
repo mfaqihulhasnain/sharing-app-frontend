@@ -37,7 +37,7 @@ export function ShareBoardShell() {
   const [attachments, setAttachments] = useState([]);
   const [isSharing, setIsSharing] = useState(false);
   const composerRef = useRef(null);
-  const uploadTriggerRef = useRef(() => {});
+  const sidebarRef = useRef(null);
 
   const selectedUsers = onlineUsers.filter((user) => selectedUserIds.includes(user.id));
   const visibleShares = shares
@@ -116,37 +116,32 @@ export function ShareBoardShell() {
     );
   };
 
-  const handleQuickUpload = () => {
-    composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    uploadTriggerRef.current?.();
-  };
-
-  const registerUploadTrigger = (open) => {
-    uploadTriggerRef.current = open;
+  const handleOpenAudience = () => {
+    sidebarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden px-4 py-3 sm:px-5 lg:px-6">
       <div className="pointer-events-none absolute inset-0">
         <div
-          className="absolute left-[-8rem] top-28 h-72 w-72 rounded-full blur-3xl"
+          className="absolute left-[-8rem] top-28 h-64 w-64 rounded-full blur-3xl"
           style={{ background: "var(--bg-orb-1)" }}
         />
         <div
-          className="absolute right-[-6rem] top-40 h-72 w-72 rounded-full blur-3xl"
+          className="absolute right-[-6rem] top-40 h-64 w-64 rounded-full blur-3xl"
           style={{ background: "var(--bg-orb-2)" }}
         />
         <div
-          className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl"
+          className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full blur-3xl"
           style={{ background: "var(--bg-orb-3)" }}
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[1480px] flex-col gap-6">
+      <div className="relative mx-auto flex w-full max-w-[1320px] flex-col gap-4">
         <EnterpriseNavbar />
 
-        <main className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="space-y-6">
+        <main className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+          <div className="space-y-3.5">
             <div ref={composerRef}>
               <ShareComposer
                 draftText={draftText}
@@ -166,13 +161,13 @@ export function ShareBoardShell() {
                 onClearAudience={() => setSelectedUserIds([])}
                 peopleById={peopleById}
                 isSharing={isSharing}
-                registerUploadTrigger={registerUploadTrigger}
+                onOpenAudience={handleOpenAudience}
               />
             </div>
             <SharedBoard items={visibleShares} peopleById={peopleById} />
           </div>
 
-          <aside>
+          <aside ref={sidebarRef}>
             <UsersSidebar
               currentUser={currentUser}
               users={onlineUsers}

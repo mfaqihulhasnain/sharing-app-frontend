@@ -1,24 +1,27 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/share-board/empty-state";
 import { ShareItemCard } from "@/components/share-board/share-item-card";
 
 export function SharedBoard({ items, peopleById }) {
   return (
-    <div className="space-y-3.5">
-      <Card className="rounded-[30px] border-line bg-card-strong px-6 py-5">
-        <CardHeader className="gap-1 p-0">
-          <CardTitle className="text-xl">Shared board</CardTitle>
-          <CardDescription>
-            One stream, one surface, and only the items you&apos;re allowed to see.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between px-1">
+        <div className="inline-flex items-center gap-2 text-xs font-medium text-muted">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/50" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
+          Live activity
+        </div>
+        {items.length > 0 && (
+          <p className="text-xs text-muted">{items.length} items visible</p>
+        )}
+      </div>
 
       {items.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <AnimatePresence initial={false}>
             {items.map((item) => {
               const person = peopleById[item.senderId];
@@ -36,10 +39,10 @@ export function SharedBoard({ items, peopleById }) {
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0, y: 18 }}
+                  initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -18 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  exit={{ opacity: 0, y: -14 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                 >
                   <ShareItemCard
                     item={normalizedItem}
