@@ -1,4 +1,3 @@
-import { Check, UserRound, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,11 +36,11 @@ export function UsersSidebar({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-2.5 px-4 pb-4 pt-0">
-          <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card-muted/75 px-3 py-2.5">
+        <CardContent className="space-y-2 px-4 pb-4 pt-0">
+          <div className="flex items-center gap-2 rounded-lg border border-line/80 bg-card-muted/70 px-2.5 py-2">
             <div
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-semibold text-white shadow-sm",
+                "flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br text-xs font-semibold text-white shadow-sm",
                 currentUser.accent,
               )}
             >
@@ -56,15 +55,11 @@ export function UsersSidebar({
                   You
                 </Badge>
               </div>
-              <p className="text-xs text-muted">{currentUser.role}</p>
             </div>
-            <div className="inline-flex items-center gap-1 rounded-full border border-success-border bg-soft-emerald px-2 py-1 text-[11px] font-medium text-success-text">
-              <Wifi className="h-3 w-3" />
-              Live
-            </div>
+            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
           </div>
 
-          <div id="online-users-list" className="space-y-1.5">
+          <div id="online-users-list" className="space-y-1">
             {users.map((user, index) => {
               const isSelected = selectedUserIds.includes(user.id);
 
@@ -77,51 +72,31 @@ export function UsersSidebar({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
                   className={cn(
-                    "flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition duration-150",
+                    "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition duration-150",
                     isSelected
-                      ? "border-accent-border bg-soft-blue/75 shadow-sm"
+                      ? "border-accent-border bg-soft-blue/65"
                       : "border-line bg-card-muted/70 hover:bg-card",
                   )}
                 >
                   <div
                     className={cn(
-                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-xs font-semibold text-white shadow-sm",
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-xs font-semibold text-white shadow-sm",
                       user.accent,
                     )}
                   >
                     {getInitials(user.name)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {user.name}
-                      </p>
-                      {isSelected && (
-                        <Badge variant="accent" className="px-1.5 py-0.5 text-[10px]">
-                          Selected
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted">{user.role}</p>
-                    <p className="inline-flex items-center gap-1 text-[11px] text-muted">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/85" />
-                      {user.presence}
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {user.name}
                     </p>
                   </div>
-                  <div
+                  <span
                     className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full border",
-                      isSelected
-                        ? "border-accent-border bg-card text-accent"
-                        : "border-line bg-transparent text-muted",
+                      "h-2 w-2 shrink-0 rounded-full",
+                      isSelected ? "bg-accent" : "bg-emerald-500",
                     )}
-                  >
-                    {isSelected ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <UserRound className="h-4 w-4" />
-                    )}
-                  </div>
+                  />
                 </motion.button>
               );
             })}
