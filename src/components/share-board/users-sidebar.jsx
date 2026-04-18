@@ -56,7 +56,6 @@ export function UsersSidebar({
                 </Badge>
               </div>
             </div>
-            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
           </div>
 
           <div id="online-users-list" className="space-y-1">
@@ -91,12 +90,6 @@ export function UsersSidebar({
                       {user.name}
                     </p>
                   </div>
-                  <span
-                    className={cn(
-                      "h-2 w-2 shrink-0 rounded-full",
-                      isSelected ? "bg-accent" : "bg-emerald-500",
-                    )}
-                  />
                 </motion.button>
               );
             })}

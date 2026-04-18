@@ -98,14 +98,6 @@ export function EnterpriseNavbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden items-center gap-1.5 rounded-full border border-success-border bg-soft-emerald px-2.5 py-1 text-[11px] font-medium text-success-text md:inline-flex">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/55" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            Live network
-          </div>
-
           <Button
             type="button"
             size="icon"
