@@ -449,7 +449,7 @@ export function ShareComposer({
                   </Button>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 {attachments.map((file) => {
                   const kind = getAttachmentKind(file);
                   const extension = getAttachmentExtension(file.name);
@@ -468,7 +468,7 @@ export function ShareComposer({
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      className="group flex w-full max-w-full items-center gap-2.5 rounded-lg border border-line/75 bg-card-muted/40 px-2.5 py-2 transition duration-150 hover:border-line hover:bg-card-muted/65 sm:max-w-[34rem]"
+                      className="group flex w-full items-center gap-2.5 rounded-lg border border-line/75 bg-card-muted/40 px-2.5 py-2 transition duration-150 hover:border-line hover:bg-card-muted/65 sm:w-[calc(50%-0.1875rem)]"
                     >
                       {hasImagePreview ? (
                         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-line/70 bg-card">

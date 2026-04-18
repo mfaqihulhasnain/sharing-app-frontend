@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BoardItemCard } from "@/components/share-board/board-item-card";
-import { formatFileSize, getFileExtension } from "@/lib/utils";
+import { cn, formatFileSize, getFileExtension } from "@/lib/utils";
 
 function getFileIcon(mimeType = "") {
   if (mimeType.startsWith("image/")) {
@@ -55,7 +55,7 @@ export function ShareItemCard({ item, person, peopleById }) {
   const files = item.files || [];
   const hasText = Boolean(text);
   const hasFiles = files.length > 0;
-  const showDivider = hasText && hasFiles;
+  const isMixedPost = hasText && hasFiles;
 
   const handleCopyText = async () => {
     if (!text) {
@@ -78,29 +78,27 @@ export function ShareItemCard({ item, person, peopleById }) {
   return (
     <BoardItemCard item={item} person={person} peopleById={peopleById}>
       {hasText && (
-        <section className="space-y-1.5">
-          <p className="whitespace-pre-wrap text-[14px] leading-6 text-foreground/95">
+        <section className={cn("space-y-1", isMixedPost && "space-y-0.5")}>
+          <p className="whitespace-pre-wrap text-[14px] leading-[1.55] text-foreground/95">
             {text}
           </p>
-          <div className="flex justify-end">
+          <div className="inline-flex items-center">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleCopyText}
-              className="h-7 rounded-md px-2 text-[11px] text-muted hover:text-foreground"
+              className="h-6 rounded-md px-1.5 text-[10.5px] text-muted hover:bg-card-muted hover:text-foreground"
             >
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className="h-3 w-3" />
               Copy
             </Button>
           </div>
         </section>
       )}
 
-      {showDivider && <div className="h-px bg-line/70" />}
-
       {hasFiles && (
-        <section className="space-y-1.5">
+        <section className={cn("space-y-1", isMixedPost && "pt-0.5")}>
           {files.map((file, index) => {
             const iconKind = getFileIcon(file.mimeType);
             const fileKey = `${file.id || file.name}-${index}`;
@@ -108,21 +106,48 @@ export function ShareItemCard({ item, person, peopleById }) {
             return (
               <div
                 key={fileKey}
-                className="group flex items-center gap-2.5 rounded-xl border border-line/80 bg-card px-2.5 py-2 transition duration-200 hover:border-accent-border/70 hover:bg-card-muted/70"
+                className={cn(
+                  "group flex items-center gap-2 rounded-lg border px-2.5 transition duration-150",
+                  isMixedPost
+                    ? "border-line/70 bg-card-muted/45 py-1.5 hover:border-line hover:bg-card-muted/70"
+                    : "border-line/80 bg-card py-2 hover:border-accent-border/70 hover:bg-card-muted/70",
+                )}
               >
-                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-soft-blue text-accent">
-                    {iconKind === "image" && <FileImage className="h-4 w-4" />}
-                    {iconKind === "video" && <FileVideo className="h-4 w-4" />}
-                    {iconKind === "sheet" && <FileSpreadsheet className="h-4 w-4" />}
-                    {iconKind === "archive" && <FileArchive className="h-4 w-4" />}
-                    {iconKind === "document" && <FileText className="h-4 w-4" />}
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex shrink-0 items-center justify-center rounded-md bg-soft-blue text-accent",
+                      isMixedPost ? "h-7 w-7" : "h-8 w-8",
+                    )}
+                  >
+                    {iconKind === "image" && (
+                      <FileImage className={cn(isMixedPost ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                    )}
+                    {iconKind === "video" && (
+                      <FileVideo className={cn(isMixedPost ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                    )}
+                    {iconKind === "sheet" && (
+                      <FileSpreadsheet
+                        className={cn(isMixedPost ? "h-3.5 w-3.5" : "h-4 w-4")}
+                      />
+                    )}
+                    {iconKind === "archive" && (
+                      <FileArchive className={cn(isMixedPost ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                    )}
+                    {iconKind === "document" && (
+                      <FileText className={cn(isMixedPost ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium leading-5 text-foreground">
                       {file.name}
                     </p>
-                    <p className="flex items-center gap-1 text-[11px] text-muted">
+                    <p
+                      className={cn(
+                        "flex items-center gap-1 text-muted",
+                        isMixedPost ? "text-[10.5px]" : "text-[11px]",
+                      )}
+                    >
                       <span>{formatFileSize(file.size)}</span>
                       <span>&bull;</span>
                       <span>{getFileExtension(file.name)}</span>
@@ -134,10 +159,13 @@ export function ShareItemCard({ item, person, peopleById }) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 shrink-0 rounded-md px-2 text-[11px] text-muted hover:bg-card hover:text-foreground"
+                  className={cn(
+                    "shrink-0 rounded-md text-[10.5px] text-muted hover:bg-card hover:text-foreground",
+                    isMixedPost ? "h-6 px-1.5" : "h-7 px-2",
+                  )}
                   onClick={() => handleDownload(file)}
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className={cn(isMixedPost ? "h-3 w-3" : "h-3.5 w-3.5")} />
                   Download
                 </Button>
               </div>
