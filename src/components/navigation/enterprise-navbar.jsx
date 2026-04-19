@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
+  { label: "Login", href: "/login" },
 ];
 
 function isItemActive(pathname, href) {
