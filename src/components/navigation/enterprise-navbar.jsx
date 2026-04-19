@@ -1,21 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Grid2x2Check, Menu, X } from "lucide-react";
+import { ChevronDown, Grid2x2Check, Loader2, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  clearStoredAccessToken,
+  getCurrentUser,
+  getStoredAccessToken,
+  logoutSession,
+} from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
-  { label: "Login", href: "/login" },
 ];
 
 function isItemActive(pathname, href) {
@@ -26,18 +31,92 @@ function isItemActive(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getCircleLabel(user) {
+  const rawName = user?.name?.trim() || user?.email?.trim() || "U";
+  return rawName.charAt(0).toUpperCase();
+}
+
 export function EnterpriseNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const userMenuRef = useRef(null);
+
+  const isSignedIn = Boolean(currentUser);
+  const navItems = useMemo(
+    () =>
+      isSignedIn
+        ? BASE_NAV_ITEMS
+        : [...BASE_NAV_ITEMS, { label: "Login", href: "/login" }],
+    [isSignedIn],
+  );
 
   useEffect(() => {
-    if (!isOpen) {
+    setIsOpen(false);
+    setIsUserMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkAuth = async () => {
+      const accessToken = getStoredAccessToken();
+
+      if (!accessToken) {
+        if (active) {
+          setCurrentUser(null);
+          setIsCheckingAuth(false);
+        }
+        return;
+      }
+
+      try {
+        const data = await getCurrentUser({ accessToken });
+
+        if (!active) {
+          return;
+        }
+
+        if (data?.user) {
+          setCurrentUser(data.user);
+        } else {
+          setCurrentUser(null);
+          clearStoredAccessToken();
+        }
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        setCurrentUser(null);
+        clearStoredAccessToken();
+      } finally {
+        if (active) {
+          setIsCheckingAuth(false);
+        }
+      }
+    };
+
+    checkAuth();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen && !isUserMenuOpen) {
       return undefined;
     }
 
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setIsOpen(false);
+        setIsUserMenuOpen(false);
       }
     };
 
@@ -45,7 +124,46 @@ export function EnterpriseNavbar() {
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, isUserMenuOpen]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event) => {
+      if (userMenuRef.current?.contains(event.target)) {
+        return;
+      }
+
+      setIsUserMenuOpen(false);
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isUserMenuOpen]);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await logoutSession({ accessToken: getStoredAccessToken() });
+    } catch {
+      // Local sign-out should still proceed even if backend revoke fails.
+    }
+
+    clearStoredAccessToken();
+    setCurrentUser(null);
+    setIsUserMenuOpen(false);
+    setIsOpen(false);
+    setIsLoggingOut(false);
+
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-2 z-50">
@@ -55,7 +173,10 @@ export function EnterpriseNavbar() {
       >
         <Link
           href="/"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            setIsUserMenuOpen(false);
+          }}
           className="group inline-flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 text-foreground transition hover:bg-card-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
         >
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft text-accent transition group-hover:scale-[1.02]">
@@ -68,7 +189,7 @@ export function EnterpriseNavbar() {
 
         <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
           <ul className="flex items-center gap-0.5 rounded-full border border-line/80 bg-card-muted/75 p-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isItemActive(pathname, item.href);
 
               return (
@@ -99,6 +220,60 @@ export function EnterpriseNavbar() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {!isCheckingAuth && isSignedIn ? (
+            <div ref={userMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen((open) => !open)}
+                className={cn(
+                  "inline-flex h-9 items-center gap-1 rounded-full border border-line bg-card-muted/65 px-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30",
+                  isUserMenuOpen && "border-accent-border bg-accent-soft/70",
+                )}
+                aria-haspopup="menu"
+                aria-expanded={isUserMenuOpen}
+                aria-label="Open account menu"
+              >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white">
+                  {getCircleLabel(currentUser)}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 text-muted transition",
+                    isUserMenuOpen && "rotate-180 text-foreground",
+                  )}
+                />
+              </button>
+
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                    className="absolute right-0 top-[calc(100%+0.45rem)] z-50 w-40 rounded-xl border border-line bg-card p-1.5 shadow-board"
+                    role="menu"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground transition hover:bg-card-muted disabled:opacity-70"
+                      role="menuitem"
+                    >
+                      {isLoggingOut ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <LogOut className="h-4 w-4" />
+                      )}
+                      {isLoggingOut ? "Logging out..." : "Logout"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : null}
+
           <Button
             type="button"
             size="icon"
@@ -139,7 +314,7 @@ export function EnterpriseNavbar() {
             >
               <div className="rounded-xl border border-line bg-card p-1.5 shadow-board">
                 <ul className="space-y-1">
-                  {NAV_ITEMS.map((item) => {
+                  {navItems.map((item) => {
                     const active = isItemActive(pathname, item.href);
 
                     return (

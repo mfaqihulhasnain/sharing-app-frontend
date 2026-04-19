@@ -54,6 +54,29 @@ async function request(path, options = {}) {
   return payload?.data;
 }
 
+export async function getCurrentUser({ accessToken }) {
+  return request("/auth/me", {
+    method: "GET",
+    headers: accessToken
+      ? {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      : {},
+  });
+}
+
+export async function logoutSession({ accessToken } = {}) {
+  return request("/auth/logout", {
+    method: "POST",
+    headers: accessToken
+      ? {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      : {},
+    body: JSON.stringify({}),
+  });
+}
+
 export async function loginWithPassword({ email, password }) {
   return request("/auth/login", {
     method: "POST",
