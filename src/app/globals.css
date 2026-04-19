@@ -9,11 +9,11 @@
   --card-strong: #ffffff;
   --card-muted: #f1f5f9;
   --line: #e2e8f0;
-  --muted: oklch(0.97 0 0);
+  --muted: #64748b;
   --muted-soft: #7b8ba1;
-  --accent: oklch(0.97 0 0);
+  --accent: #2563eb;
   --accent-hover: #1d4ed8;
-  --accent-foreground: oklch(0.205 0 0);
+  --accent-foreground: #ffffff;
   --accent-soft: #dbeafe;
   --accent-border: #bfdbfe;
   --success-soft: rgba(16, 185, 129, 0.14);
@@ -33,7 +33,7 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: #64748b;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
