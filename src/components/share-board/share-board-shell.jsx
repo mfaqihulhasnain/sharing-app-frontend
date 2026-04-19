@@ -14,9 +14,28 @@ import {
 } from "@/lib/mock-data";
 import { canUserSeeShare } from "@/lib/utils";
 
+let nextAttachmentId = 1;
+let nextShareId =
+  initialShares.reduce(
+    (maxId, share) => Math.max(maxId, Number(share.id) || 0),
+    0,
+  ) + 1;
+
+function allocateAttachmentId() {
+  const id = nextAttachmentId;
+  nextAttachmentId += 1;
+  return id;
+}
+
+function allocateShareId() {
+  const id = nextShareId;
+  nextShareId += 1;
+  return id;
+}
+
 function createAttachmentRecord(file) {
   return {
-    id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`,
+    id: allocateAttachmentId(),
     name: file.name,
     size: file.size,
     type: file.type,
@@ -86,7 +105,7 @@ export function ShareBoardShell() {
       .filter((user) => audienceIds.includes(user.id))
       .map((user) => user.name);
     const newShare = {
-      id: `share-${createdAt}`,
+      id: allocateShareId(),
       senderId: currentUser.id,
       createdAt,
       audienceIds,
