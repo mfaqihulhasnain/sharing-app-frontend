@@ -54,22 +54,20 @@ async function request(path, options = {}) {
   return payload?.data;
 }
 
-export async function loginWithPassword({ identifier, password }) {
+export async function loginWithPassword({ email, password }) {
   return request("/auth/login", {
     method: "POST",
     body: JSON.stringify({
-      identifier,
+      email,
       password,
     }),
   });
 }
 
-export async function registerWithPassword({ name, username, email, password }) {
+export async function registerWithPassword({ email, password }) {
   return request("/auth/register", {
     method: "POST",
     body: JSON.stringify({
-      name,
-      username,
       email,
       password,
     }),
@@ -116,4 +114,3 @@ export function getAuthErrorMessage(error) {
 
   return "Unexpected error. Please try again.";
 }
-

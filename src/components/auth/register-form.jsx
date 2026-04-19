@@ -3,15 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  AtSign,
-  CheckCircle2,
-  Circle,
-  Loader2,
-  LockKeyhole,
-  Mail,
-  UserRound,
-} from "lucide-react";
+import { CheckCircle2, Circle, Loader2, LockKeyhole, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
@@ -31,24 +23,10 @@ import {
 function validateRegister(values) {
   const nextErrors = {};
 
-  if (!values.fullName.trim()) {
-    nextErrors.fullName = "Full name is required.";
-  } else if (values.fullName.trim().length < 2) {
-    nextErrors.fullName = "Full name must be at least 2 characters.";
-  }
-
   if (!values.email.trim()) {
     nextErrors.email = "Email is required.";
   } else if (!isValidEmail(values.email.trim().toLowerCase())) {
     nextErrors.email = "Enter a valid email address.";
-  }
-
-  if (!values.username.trim()) {
-    nextErrors.username = "Username is required.";
-  } else if (values.username.trim().length < 3) {
-    nextErrors.username = "Username must be at least 3 characters.";
-  } else if (!/^[a-z0-9_]+$/.test(values.username.trim().toLowerCase())) {
-    nextErrors.username = "Use lowercase letters, numbers, and underscores only.";
   }
 
   if (!values.password) {
@@ -73,9 +51,7 @@ function validateRegister(values) {
 export function RegisterForm() {
   const router = useRouter();
   const [values, setValues] = useState({
-    fullName: "",
     email: "",
-    username: "",
     password: "",
     confirmPassword: "",
     acceptTerms: false,
@@ -83,7 +59,6 @@ export function RegisterForm() {
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formHint, setFormHint] = useState("");
   const [serverError, setServerError] = useState("");
 
   const errors = useMemo(() => validateRegister(values), [values]);
@@ -108,9 +83,6 @@ export function RegisterForm() {
 
   const handleChange = (fieldName, value) => {
     setValues((current) => ({ ...current, [fieldName]: value }));
-    if (formHint) {
-      setFormHint("");
-    }
     if (serverError) {
       setServerError("");
     }
@@ -125,14 +97,11 @@ export function RegisterForm() {
     }
 
     setIsSubmitting(true);
-    setFormHint("");
     setServerError("");
 
     try {
       const authData = await registerWithPassword({
-        name: values.fullName.trim(),
         email: values.email.trim().toLowerCase(),
-        username: values.username.trim().toLowerCase(),
         password: values.password,
       });
 
@@ -155,19 +124,6 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <LabeledInput
-        label="Full name"
-        name="fullName"
-        autoComplete="name"
-        placeholder="John Smith"
-        icon={UserRound}
-        value={values.fullName}
-        onChange={(event) => handleChange("fullName", event.target.value)}
-        onBlur={() => handleBlur("fullName")}
-        disabled={isSubmitting}
-        error={displayError("fullName")}
-      />
-
-      <LabeledInput
         label="Email"
         name="email"
         type="email"
@@ -179,19 +135,6 @@ export function RegisterForm() {
         onBlur={() => handleBlur("email")}
         disabled={isSubmitting}
         error={displayError("email")}
-      />
-
-      <LabeledInput
-        label="Username"
-        name="username"
-        autoComplete="username"
-        placeholder="john_smith"
-        icon={AtSign}
-        value={values.username}
-        onChange={(event) => handleChange("username", event.target.value)}
-        onBlur={() => handleBlur("username")}
-        disabled={isSubmitting}
-        error={displayError("username")}
       />
 
       <PasswordInput
@@ -294,12 +237,6 @@ export function RegisterForm() {
           "Create account"
         )}
       </Button>
-
-      {formHint ? (
-        <p className="rounded-lg border border-accent-border bg-accent-soft/65 px-3 py-2 text-xs leading-5 text-muted">
-          {formHint}
-        </p>
-      ) : null}
 
       {serverError ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">

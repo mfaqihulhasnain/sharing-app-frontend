@@ -82,7 +82,7 @@ export function LoginForm() {
 
     try {
       const authData = await loginWithPassword({
-        identifier: values.email.trim().toLowerCase(),
+        email: values.email.trim().toLowerCase(),
         password: values.password,
       });
 
