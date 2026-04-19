@@ -1,8 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Circle, Loader2, LockKeyhole, Mail, UserRound } from "lucide-react";
+import {
+  AtSign,
+  CheckCircle2,
+  Circle,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  UserRound,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
 import { PasswordInput } from "@/components/auth/password-input";
@@ -12,6 +22,11 @@ import {
   isValidEmail,
 } from "@/components/auth/form-utils";
 import { cn } from "@/lib/utils";
+import {
+  getAuthErrorMessage,
+  persistAccessToken,
+  registerWithPassword,
+} from "@/lib/auth-client";
 
 function validateRegister(values) {
   const nextErrors = {};
@@ -26,6 +41,14 @@ function validateRegister(values) {
     nextErrors.email = "Email is required.";
   } else if (!isValidEmail(values.email.trim().toLowerCase())) {
     nextErrors.email = "Enter a valid email address.";
+  }
+
+  if (!values.username.trim()) {
+    nextErrors.username = "Username is required.";
+  } else if (values.username.trim().length < 3) {
+    nextErrors.username = "Username must be at least 3 characters.";
+  } else if (!/^[a-z0-9_]+$/.test(values.username.trim().toLowerCase())) {
+    nextErrors.username = "Use lowercase letters, numbers, and underscores only.";
   }
 
   if (!values.password) {
@@ -48,9 +71,11 @@ function validateRegister(values) {
 }
 
 export function RegisterForm() {
+  const router = useRouter();
   const [values, setValues] = useState({
     fullName: "",
     email: "",
+    username: "",
     password: "",
     confirmPassword: "",
     acceptTerms: false,
@@ -59,6 +84,7 @@ export function RegisterForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formHint, setFormHint] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const errors = useMemo(() => validateRegister(values), [values]);
   const passwordChecks = useMemo(
@@ -85,9 +111,12 @@ export function RegisterForm() {
     if (formHint) {
       setFormHint("");
     }
+    if (serverError) {
+      setServerError("");
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true);
 
@@ -97,13 +126,30 @@ export function RegisterForm() {
 
     setIsSubmitting(true);
     setFormHint("");
+    setServerError("");
 
-    window.setTimeout(() => {
+    try {
+      const authData = await registerWithPassword({
+        name: values.fullName.trim(),
+        email: values.email.trim().toLowerCase(),
+        username: values.username.trim().toLowerCase(),
+        password: values.password,
+      });
+
+      if (authData?.accessToken) {
+        persistAccessToken(authData.accessToken, { remember: true });
+      }
+
+      toast.success("Account created successfully");
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      const message = getAuthErrorMessage(error);
+      setServerError(message);
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-      setFormHint(
-        "Account form is ready. Backend registration request will be connected in the next step.",
-      );
-    }, 800);
+    }
   };
 
   return (
@@ -133,6 +179,19 @@ export function RegisterForm() {
         onBlur={() => handleBlur("email")}
         disabled={isSubmitting}
         error={displayError("email")}
+      />
+
+      <LabeledInput
+        label="Username"
+        name="username"
+        autoComplete="username"
+        placeholder="john_smith"
+        icon={AtSign}
+        value={values.username}
+        onChange={(event) => handleChange("username", event.target.value)}
+        onBlur={() => handleBlur("username")}
+        disabled={isSubmitting}
+        error={displayError("username")}
       />
 
       <PasswordInput
@@ -239,6 +298,12 @@ export function RegisterForm() {
       {formHint ? (
         <p className="rounded-lg border border-accent-border bg-accent-soft/65 px-3 py-2 text-xs leading-5 text-muted">
           {formHint}
+        </p>
+      ) : null}
+
+      {serverError ? (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
+          {serverError}
         </p>
       ) : null}
     </form>

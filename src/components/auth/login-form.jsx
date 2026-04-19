@@ -1,11 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, LockKeyhole, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
 import { PasswordInput } from "@/components/auth/password-input";
 import { isValidEmail } from "@/components/auth/form-utils";
+import {
+  getAuthErrorMessage,
+  loginWithPassword,
+  persistAccessToken,
+} from "@/lib/auth-client";
 
 function validateLogin(values) {
   const nextErrors = {};
@@ -26,6 +33,7 @@ function validateLogin(values) {
 }
 
 export function LoginForm() {
+  const router = useRouter();
   const [values, setValues] = useState({
     email: "",
     password: "",
@@ -35,6 +43,7 @@ export function LoginForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formHint, setFormHint] = useState("");
+  const [serverError, setServerError] = useState("");
 
   const errors = useMemo(() => validateLogin(values), [values]);
 
@@ -54,9 +63,12 @@ export function LoginForm() {
     if (formHint) {
       setFormHint("");
     }
+    if (serverError) {
+      setServerError("");
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true);
 
@@ -66,13 +78,30 @@ export function LoginForm() {
 
     setIsSubmitting(true);
     setFormHint("");
+    setServerError("");
 
-    window.setTimeout(() => {
+    try {
+      const authData = await loginWithPassword({
+        identifier: values.email.trim().toLowerCase(),
+        password: values.password,
+      });
+
+      if (authData?.accessToken) {
+        persistAccessToken(authData.accessToken, {
+          remember: values.rememberMe,
+        });
+      }
+
+      toast.success("Signed in successfully");
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      const message = getAuthErrorMessage(error);
+      setServerError(message);
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-      setFormHint(
-        "Frontend is ready. Backend login request will be connected in the next step.",
-      );
-    }, 700);
+    }
   };
 
   return (
@@ -145,6 +174,12 @@ export function LoginForm() {
       {formHint ? (
         <p className="rounded-lg border border-accent-border bg-accent-soft/65 px-3 py-2 text-xs leading-5 text-muted">
           {formHint}
+        </p>
+      ) : null}
+
+      {serverError ? (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
+          {serverError}
         </p>
       ) : null}
     </form>
