@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthRouteGuard } from "@/components/auth/auth-route-guard";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata = {
@@ -9,17 +10,19 @@ export const metadata = {
 
 export default function RegisterPage() {
   return (
-    <AuthShell
-      title="Create your account"
-      description="Set up your profile to start sharing securely on the local board."
-      footer={
-        <>
-          Already have an account? <Link href="/login">Sign in</Link>
-        </>
-      }
-    >
-      <RegisterForm />
-    </AuthShell>
+    <AuthRouteGuard>
+      <AuthShell
+        title="Create your account"
+        description="Set up your profile to start sharing securely on the local board."
+        footer={
+          <>
+            Already have an account? <Link href="/login">Sign in</Link>
+          </>
+        }
+      >
+        <RegisterForm />
+      </AuthShell>
+    </AuthRouteGuard>
   );
 }
 
