@@ -27,6 +27,8 @@ function validateLogin(values) {
     nextErrors.password = "Password is required.";
   } else if (values.password.length < 8) {
     nextErrors.password = "Password must be at least 8 characters.";
+  } else if (values.password.length > 72) {
+    nextErrors.password = "Password must be 72 characters or fewer.";
   }
 
   return nextErrors;

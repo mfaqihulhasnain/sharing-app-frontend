@@ -54,15 +54,62 @@ async function request(path, options = {}) {
   return payload?.data;
 }
 
-export async function getCurrentUser({ accessToken }) {
-  return request("/auth/me", {
-    method: "GET",
-    headers: accessToken
-      ? {
-          Authorization: `Bearer ${accessToken}`,
-        }
-      : {},
+function getTokenStoragePreference() {
+  if (typeof window === "undefined") {
+    return "local";
+  }
+
+  if (window.sessionStorage.getItem(ACCESS_TOKEN_KEY)) {
+    return "session";
+  }
+
+  return "local";
+}
+
+async function refreshAccessToken() {
+  const previousPreference = getTokenStoragePreference();
+  const data = await request("/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({}),
   });
+
+  const nextAccessToken = data?.accessToken || "";
+  if (nextAccessToken) {
+    persistAccessToken(nextAccessToken, {
+      remember: previousPreference !== "session",
+    });
+  }
+
+  return nextAccessToken;
+}
+
+export async function getCurrentUser({ accessToken }) {
+  try {
+    return await request("/auth/me", {
+      method: "GET",
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : {},
+    });
+  } catch (error) {
+    if (!(error instanceof AuthRequestError) || error.statusCode !== 401) {
+      throw error;
+    }
+
+    const refreshedAccessToken = await refreshAccessToken();
+    if (!refreshedAccessToken) {
+      throw error;
+    }
+
+    return request("/auth/me", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${refreshedAccessToken}`,
+      },
+    });
+  }
 }
 
 export async function logoutSession({ accessToken } = {}) {
