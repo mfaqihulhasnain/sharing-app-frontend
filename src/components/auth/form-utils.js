@@ -2,6 +2,10 @@ export function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+export function hasRequiredPasswordComplexity(password) {
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/.test(password);
+}
+
 export function getPasswordChecks(password) {
   return [
     {
@@ -23,6 +27,11 @@ export function getPasswordChecks(password) {
       key: "number",
       label: "One number",
       passed: /\d/.test(password),
+    },
+    {
+      key: "special",
+      label: "One special character",
+      passed: /[^A-Za-z0-9]/.test(password),
     },
   ];
 }
@@ -52,4 +61,3 @@ export function getPasswordStrength(checks) {
     textClassName: "text-emerald-600",
   };
 }
-

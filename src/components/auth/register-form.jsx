@@ -11,6 +11,7 @@ import { PasswordInput } from "@/components/auth/password-input";
 import {
   getPasswordChecks,
   getPasswordStrength,
+  hasRequiredPasswordComplexity,
   isValidEmail,
 } from "@/components/auth/form-utils";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,11 @@ function validateRegister(values) {
     nextErrors.password = "Password is required.";
   } else if (values.password.length < 8) {
     nextErrors.password = "Password must be at least 8 characters.";
+  } else if (values.password.length > 72) {
+    nextErrors.password = "Password must be 72 characters or fewer.";
+  } else if (!hasRequiredPasswordComplexity(values.password)) {
+    nextErrors.password =
+      "Password must include uppercase, lowercase, one number, and one special character.";
   }
 
   if (!values.confirmPassword) {

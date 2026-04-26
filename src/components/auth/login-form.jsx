@@ -7,7 +7,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
 import { PasswordInput } from "@/components/auth/password-input";
-import { isValidEmail } from "@/components/auth/form-utils";
+import {
+  hasRequiredPasswordComplexity,
+  isValidEmail,
+} from "@/components/auth/form-utils";
 import {
   getAuthErrorMessage,
   loginWithPassword,
@@ -29,6 +32,9 @@ function validateLogin(values) {
     nextErrors.password = "Password must be at least 8 characters.";
   } else if (values.password.length > 72) {
     nextErrors.password = "Password must be 72 characters or fewer.";
+  } else if (!hasRequiredPasswordComplexity(values.password)) {
+    nextErrors.password =
+      "Password must include uppercase, lowercase, one number, and one special character.";
   }
 
   return nextErrors;
