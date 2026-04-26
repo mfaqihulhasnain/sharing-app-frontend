@@ -17,7 +17,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   getAuthErrorMessage,
-  persistAccessToken,
   registerWithPassword,
 } from "@/lib/auth-client";
 
@@ -110,13 +109,17 @@ export function RegisterForm() {
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
+      const verificationEmailSent = authData?.verificationEmailSent !== false;
 
-      if (authData?.accessToken) {
-        persistAccessToken(authData.accessToken, { remember: true });
+      if (verificationEmailSent) {
+        toast.success("Account created. Check your email for the verification link.");
+      } else {
+        toast.success(
+          "Account created, but verification email could not be sent. Use resend on login."
+        );
       }
 
-      toast.success("Account created successfully");
-      router.push("/");
+      router.push(`/login?email=${encodeURIComponent(values.email.trim().toLowerCase())}`);
       router.refresh();
     } catch (error) {
       const message = getAuthErrorMessage(error);

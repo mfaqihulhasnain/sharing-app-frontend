@@ -2,11 +2,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/a
 const ACCESS_TOKEN_KEY = "sharing-board.access-token";
 
 class AuthRequestError extends Error {
-  constructor(message, statusCode, details) {
+  constructor(message, statusCode, details, code) {
     super(message);
     this.name = "AuthRequestError";
     this.statusCode = statusCode;
     this.details = details;
+    this.code = code;
   }
 }
 
@@ -48,7 +49,7 @@ async function request(path, options = {}) {
         ? "Something went wrong on the server."
         : "Request failed. Please try again.");
 
-    throw new AuthRequestError(message, response.status, payload?.details);
+    throw new AuthRequestError(message, response.status, payload?.details, payload?.code);
   }
 
   return payload?.data;
@@ -144,6 +145,24 @@ export async function registerWithPassword({ email, password }) {
   });
 }
 
+export async function verifyEmailToken({ token }) {
+  return request("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({
+      token,
+    }),
+  });
+}
+
+export async function resendVerificationEmail({ email }) {
+  return request("/auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+    }),
+  });
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;
@@ -183,4 +202,8 @@ export function getAuthErrorMessage(error) {
   }
 
   return "Unexpected error. Please try again.";
+}
+
+export function hasAuthErrorCode(error, code) {
+  return error instanceof AuthRequestError && error.code === code;
 }

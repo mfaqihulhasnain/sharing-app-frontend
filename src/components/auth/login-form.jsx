@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, LockKeyhole, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,10 @@ import {
 } from "@/components/auth/form-utils";
 import {
   getAuthErrorMessage,
+  hasAuthErrorCode,
   loginWithPassword,
   persistAccessToken,
+  resendVerificationEmail,
 } from "@/lib/auth-client";
 
 function validateLogin(values) {
@@ -42,6 +44,7 @@ function validateLogin(values) {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [values, setValues] = useState({
     email: "",
     password: "",
@@ -50,10 +53,30 @@ export function LoginForm() {
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [formHint, setFormHint] = useState("");
   const [serverError, setServerError] = useState("");
+  const [showResendVerificationAction, setShowResendVerificationAction] = useState(false);
 
   const errors = useMemo(() => validateLogin(values), [values]);
+
+  useEffect(() => {
+    const emailFromQuery = searchParams.get("email");
+    if (!emailFromQuery) {
+      return;
+    }
+
+    setValues((current) => {
+      if (current.email) {
+        return current;
+      }
+
+      return {
+        ...current,
+        email: emailFromQuery,
+      };
+    });
+  }, [searchParams]);
 
   const displayError = (fieldName) => {
     if (!submitted && !touched[fieldName]) {
@@ -73,6 +96,36 @@ export function LoginForm() {
     }
     if (serverError) {
       setServerError("");
+    }
+    if (showResendVerificationAction) {
+      setShowResendVerificationAction(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const normalizedEmail = values.email.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
+      const message = "Enter a valid email before requesting a new verification link.";
+      setServerError(message);
+      toast.error(message);
+      return;
+    }
+
+    setIsResendingVerification(true);
+    setServerError("");
+
+    try {
+      await resendVerificationEmail({ email: normalizedEmail });
+      const message = "Verification email sent. Please check your inbox.";
+      setFormHint(message);
+      toast.success(message);
+    } catch (error) {
+      const message = getAuthErrorMessage(error);
+      setServerError(message);
+      toast.error(message);
+    } finally {
+      setIsResendingVerification(false);
     }
   };
 
@@ -105,6 +158,13 @@ export function LoginForm() {
       router.refresh();
     } catch (error) {
       const message = getAuthErrorMessage(error);
+      const isUnverifiedError = hasAuthErrorCode(error, "EMAIL_NOT_VERIFIED");
+
+      if (isUnverifiedError) {
+        setShowResendVerificationAction(true);
+        setFormHint("Your account is not verified yet. Request a new verification email.");
+      }
+
       setServerError(message);
       toast.error(message);
     } finally {
@@ -189,6 +249,25 @@ export function LoginForm() {
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
           {serverError}
         </p>
+      ) : null}
+
+      {showResendVerificationAction ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10 w-full rounded-xl text-sm"
+          onClick={handleResendVerification}
+          disabled={isResendingVerification || isSubmitting}
+        >
+          {isResendingVerification ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sending verification email...
+            </>
+          ) : (
+            "Resend verification email"
+          )}
+        </Button>
       ) : null}
     </form>
   );
