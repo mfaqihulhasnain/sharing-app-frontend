@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, LockKeyhole, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -213,15 +214,12 @@ export function LoginForm() {
           Remember me
         </label>
 
-        <button
-          type="button"
-          onClick={() =>
-            setFormHint("Forgot password flow UI is ready and will be wired next.")
-          }
+        <Link
+          href="/forgot-password"
           className="text-sm font-medium text-foreground underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
         >
           Forgot password?
-        </button>
+        </Link>
       </div>
 
       <Button

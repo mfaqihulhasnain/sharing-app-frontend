@@ -163,6 +163,25 @@ export async function resendVerificationEmail({ email }) {
   });
 }
 
+export async function requestPasswordReset({ email }) {
+  return request("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+    }),
+  });
+}
+
+export async function resetPasswordWithToken({ token, password }) {
+  return request("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({
+      token,
+      password,
+    }),
+  });
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;
