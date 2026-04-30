@@ -182,6 +182,19 @@ export async function resetPasswordWithToken({ token, password }) {
   });
 }
 
+export function getGoogleAuthStartUrl() {
+  return getRequestUrl("/auth/google/start");
+}
+
+export async function bootstrapSessionFromRefresh() {
+  const refreshedAccessToken = await refreshAccessToken();
+  if (!refreshedAccessToken) {
+    throw new AuthRequestError("Unable to start authenticated session.", 401);
+  }
+
+  return refreshedAccessToken;
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;

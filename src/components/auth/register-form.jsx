@@ -16,6 +16,7 @@ import {
 } from "@/components/auth/form-utils";
 import { cn } from "@/lib/utils";
 import {
+  getGoogleAuthStartUrl,
   getAuthErrorMessage,
   registerWithPassword,
 } from "@/lib/auth-client";
@@ -65,6 +66,7 @@ export function RegisterForm() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
+  const googleAuthStartUrl = getGoogleAuthStartUrl();
 
   const errors = useMemo(() => validateRegister(values), [values]);
   const passwordChecks = useMemo(
@@ -245,6 +247,10 @@ export function RegisterForm() {
         ) : (
           "Create account"
         )}
+      </Button>
+
+      <Button type="button" variant="outline" className="h-11 w-full rounded-xl text-sm" asChild>
+        <a href={googleAuthStartUrl}>Continue with Google</a>
       </Button>
 
       {serverError ? (

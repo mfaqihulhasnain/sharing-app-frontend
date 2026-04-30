@@ -13,6 +13,7 @@ import {
   isValidEmail,
 } from "@/components/auth/form-utils";
 import {
+  getGoogleAuthStartUrl,
   getAuthErrorMessage,
   hasAuthErrorCode,
   loginWithPassword,
@@ -58,6 +59,7 @@ export function LoginForm() {
   const [formHint, setFormHint] = useState("");
   const [serverError, setServerError] = useState("");
   const [showResendVerificationAction, setShowResendVerificationAction] = useState(false);
+  const googleAuthStartUrl = getGoogleAuthStartUrl();
 
   const errors = useMemo(() => validateLogin(values), [values]);
 
@@ -235,6 +237,10 @@ export function LoginForm() {
         ) : (
           "Sign in"
         )}
+      </Button>
+
+      <Button type="button" variant="outline" className="h-11 w-full rounded-xl text-sm" asChild>
+        <a href={googleAuthStartUrl}>Continue with Google</a>
       </Button>
 
       {formHint ? (
