@@ -10,6 +10,7 @@
 
 # next.js output
 /.next/
+/.next-*/
 /.next-runtime/
 /out/
 
