@@ -364,10 +364,10 @@ export function ShareBoardShell() {
         );
 
         setCurrentUser(resolvedCurrentUser);
-        setDirectoryUsers(fallbackAudienceUsers);
         setPeopleById(createPeopleById([resolvedCurrentUser, ...verifiedDirectoryUsers]));
 
         if (!presenceTopic || !isRealtimePresenceConfigured()) {
+          setDirectoryUsers(fallbackAudienceUsers);
           setSelectedUserIds((currentSelection) =>
             currentSelection.filter((id) =>
               fallbackAudienceUsers.some((user) => getIdKey(user.id) === getIdKey(id)),
