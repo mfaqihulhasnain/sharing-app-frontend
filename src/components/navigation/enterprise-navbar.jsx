@@ -10,6 +10,7 @@ import {
   clearStoredAccessToken,
   getCurrentUser,
   getStoredAccessToken,
+  isUnauthorizedAuthError,
   logoutSession,
 } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -87,13 +88,15 @@ export function EnterpriseNavbar() {
           setCurrentUser(null);
           clearStoredAccessToken();
         }
-      } catch {
+      } catch (error) {
         if (!active) {
           return;
         }
 
-        setCurrentUser(null);
-        clearStoredAccessToken();
+        if (isUnauthorizedAuthError(error)) {
+          setCurrentUser(null);
+          clearStoredAccessToken();
+        }
       } finally {
         if (active) {
           setIsCheckingAuth(false);

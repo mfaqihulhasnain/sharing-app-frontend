@@ -6,6 +6,7 @@ import {
   clearStoredAccessToken,
   getCurrentUser,
   getStoredAccessToken,
+  isUnauthorizedAuthError,
 } from "@/lib/auth-client";
 
 export function AuthRouteGuard({ children }) {
@@ -39,12 +40,14 @@ export function AuthRouteGuard({ children }) {
         }
 
         clearStoredAccessToken();
-      } catch {
+      } catch (error) {
         if (!active) {
           return;
         }
 
-        clearStoredAccessToken();
+        if (isUnauthorizedAuthError(error)) {
+          clearStoredAccessToken();
+        }
       }
 
       if (active) {
@@ -65,4 +68,3 @@ export function AuthRouteGuard({ children }) {
 
   return children;
 }
-

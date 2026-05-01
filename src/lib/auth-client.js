@@ -268,3 +268,7 @@ export function getAuthErrorMessage(error) {
 export function hasAuthErrorCode(error, code) {
   return error instanceof AuthRequestError && error.code === code;
 }
+
+export function isUnauthorizedAuthError(error) {
+  return error instanceof AuthRequestError && error.statusCode === 401;
+}
