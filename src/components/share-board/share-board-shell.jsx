@@ -7,6 +7,7 @@ import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
 import {
+  getPresenceBootstrap,
   getStoredAccessToken,
   getUsersDirectory,
   getUsersMe,
@@ -15,6 +16,11 @@ import {
   currentUser as fallbackCurrentUser,
   initialShares,
 } from "@/lib/mock-data";
+import {
+  createPresenceSessionKey,
+  isRealtimePresenceConfigured,
+  subscribeToPresenceChannel,
+} from "@/lib/realtime-presence";
 import { canUserSeeShare } from "@/lib/utils";
 
 const USER_ACCENT_GRADIENTS = [
@@ -25,6 +31,33 @@ const USER_ACCENT_GRADIENTS = [
   "from-emerald-400 to-teal-500",
   "from-indigo-400 to-blue-500",
 ];
+const GUEST_NAME_ADJECTIVES = [
+  "Swift",
+  "Calm",
+  "Bright",
+  "Brisk",
+  "Merry",
+  "Gentle",
+  "Lucky",
+  "Bold",
+  "Cozy",
+  "Sunny",
+];
+const GUEST_NAME_NOUNS = [
+  "Sparrow",
+  "Falcon",
+  "Otter",
+  "Comet",
+  "Pine",
+  "River",
+  "Nimbus",
+  "Dawn",
+  "Maple",
+  "Harbor",
+];
+const GUEST_LABEL_MAP_STORAGE_KEY = "sharing-board.guest-label-map";
+const PRESENCE_USER_ID_PATTERN = /^u:(\d+)$/;
+const PRESENCE_GUEST_ID_PATTERN = /^g:(.+)$/;
 
 let nextAttachmentId = 1;
 let nextShareId =
@@ -62,16 +95,32 @@ function wait(ms) {
 }
 
 function getAccentForUserId(id) {
-  if (!Number.isFinite(id)) {
-    return USER_ACCENT_GRADIENTS[0];
+  if (typeof id === "number" && Number.isFinite(id)) {
+    const index = Math.abs(id) % USER_ACCENT_GRADIENTS.length;
+    return USER_ACCENT_GRADIENTS[index];
   }
 
-  const index = Math.abs(Number(id)) % USER_ACCENT_GRADIENTS.length;
+  if (typeof id === "string" && id.trim()) {
+    const hash = id
+      .trim()
+      .split("")
+      .reduce((total, character) => total + character.charCodeAt(0), 0);
+    const index = Math.abs(hash) % USER_ACCENT_GRADIENTS.length;
+    return USER_ACCENT_GRADIENTS[index];
+  }
+
+  const index = 0;
   return USER_ACCENT_GRADIENTS[index];
 }
 
 function toBoardUser(user, fallback = {}) {
-  const resolvedId = Number.isFinite(user?.id) ? Number(user.id) : fallback.id || 0;
+  const hasNumericId = typeof user?.id === "number" && Number.isFinite(user.id);
+  const hasStringId = typeof user?.id === "string" && user.id.trim().length > 0;
+  const resolvedId = hasNumericId
+    ? user.id
+    : hasStringId
+      ? user.id.trim()
+      : fallback.id || 0;
   const resolvedName =
     typeof user?.name === "string" && user.name.trim()
       ? user.name.trim()
@@ -80,22 +129,111 @@ function toBoardUser(user, fallback = {}) {
   return {
     id: resolvedId,
     name: resolvedName,
-    role: fallback.role || "Team member",
+    role: fallback.role || (typeof resolvedId === "string" ? "Guest" : "Team member"),
     presence: fallback.presence || "Available",
     accent: getAccentForUserId(resolvedId),
-    email: user?.email || "",
+    email: typeof user?.email === "string" ? user.email : "",
   };
 }
 
 function createPeopleById(people) {
-  return people.reduce((accumulator, person) => {
-    accumulator[person.id] = person;
-    return accumulator;
-  }, {});
+  const peopleById = {};
+
+  people.forEach((person) => {
+    if (!person || person.id === undefined || person.id === null) {
+      return;
+    }
+
+    peopleById[String(person.id)] = person;
+  });
+
+  return peopleById;
 }
 
 function isDummySeedUser(user) {
   return typeof user?.email === "string" && user.email.endsWith("@sharing.local");
+}
+
+function getIdKey(id) {
+  if (typeof id === "number" && Number.isFinite(id)) return String(id);
+  if (typeof id === "string" && id.trim()) return id.trim();
+  return "";
+}
+
+function flattenPresenceEntries(presenceState) {
+  if (!presenceState || typeof presenceState !== "object") {
+    return [];
+  }
+
+  const actors = [];
+
+  Object.entries(presenceState).forEach(([presenceKey, metas]) => {
+    if (!Array.isArray(metas)) {
+      return;
+    }
+
+    metas.forEach((meta) => {
+      if (!meta || typeof meta !== "object") {
+        return;
+      }
+
+      const actorId =
+        typeof meta.actorId === "string" && meta.actorId.trim()
+          ? meta.actorId.trim()
+          : typeof presenceKey === "string" && presenceKey.trim()
+            ? presenceKey.trim()
+            : "";
+
+      if (!actorId) {
+        return;
+      }
+
+      actors.push({
+        actorId,
+        actorType: meta.actorType === "user" ? "user" : "guest",
+        userId:
+          typeof meta.userId === "number" && Number.isInteger(meta.userId)
+            ? meta.userId
+            : null,
+        guestId:
+          typeof meta.guestId === "string" && meta.guestId.trim()
+            ? meta.guestId.trim()
+            : null,
+      });
+    });
+  });
+
+  return actors;
+}
+
+function resolveUserIdFromPresenceActor(actor) {
+  if (typeof actor?.userId === "number" && Number.isInteger(actor.userId)) {
+    return actor.userId;
+  }
+
+  if (typeof actor?.actorId !== "string") {
+    return null;
+  }
+
+  const match = PRESENCE_USER_ID_PATTERN.exec(actor.actorId);
+  if (!match) {
+    return null;
+  }
+
+  return Number(match[1]);
+}
+
+function resolveGuestIdFromPresenceActor(actor) {
+  if (typeof actor?.guestId === "string" && actor.guestId.trim()) {
+    return actor.guestId.trim();
+  }
+
+  if (typeof actor?.actorId !== "string") {
+    return "";
+  }
+
+  const match = PRESENCE_GUEST_ID_PATTERN.exec(actor.actorId);
+  return match ? match[1].trim() : "";
 }
 
 export function ShareBoardShell() {
@@ -111,60 +249,286 @@ export function ShareBoardShell() {
   const [isSharing, setIsSharing] = useState(false);
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
+  const guestLabelMapRef = useRef({});
 
   useEffect(() => {
     let active = true;
+    let unsubscribePresence = async () => {};
 
-    const mapDirectoryUsers = (directoryResult, meUserId) =>
+    const loadGuestLabelState = () => {
+      if (typeof window === "undefined") {
+        guestLabelMapRef.current = {};
+        return;
+      }
+
+      try {
+        const rawValue = window.sessionStorage.getItem(GUEST_LABEL_MAP_STORAGE_KEY);
+        const parsed = rawValue ? JSON.parse(rawValue) : {};
+        const restoredMap = parsed && typeof parsed === "object" ? parsed : {};
+        guestLabelMapRef.current = restoredMap;
+      } catch (_error) {
+        guestLabelMapRef.current = {};
+      }
+    };
+
+    const persistGuestLabelState = () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      try {
+        window.sessionStorage.setItem(
+          GUEST_LABEL_MAP_STORAGE_KEY,
+          JSON.stringify(guestLabelMapRef.current),
+        );
+      } catch (_error) {
+        // Ignore storage-write errors in private mode or restrictive browsers.
+      }
+    };
+
+    const getGuestLabel = (guestId) => {
+      if (!guestId) {
+        return "Visitor (Guest)";
+      }
+
+      const existingLabel = guestLabelMapRef.current[guestId];
+      const isLegacyNumberedLabel =
+        typeof existingLabel === "string" && /^Guest \d+$/.test(existingLabel);
+      if (existingLabel && !isLegacyNumberedLabel) {
+        return existingLabel;
+      }
+
+      const usedLabels = new Set(
+        Object.values(guestLabelMapRef.current).filter(
+          (value) => typeof value === "string" && value.trim(),
+        ),
+      );
+      const totalCombinations = GUEST_NAME_ADJECTIVES.length * GUEST_NAME_NOUNS.length;
+      let nextLabel = "";
+
+      for (let attempt = 0; attempt < totalCombinations; attempt += 1) {
+        const adjective =
+          GUEST_NAME_ADJECTIVES[Math.floor(Math.random() * GUEST_NAME_ADJECTIVES.length)];
+        const noun = GUEST_NAME_NOUNS[Math.floor(Math.random() * GUEST_NAME_NOUNS.length)];
+        const candidate = `${adjective} ${noun} (Guest)`;
+        if (!usedLabels.has(candidate)) {
+          nextLabel = candidate;
+          break;
+        }
+      }
+
+      if (!nextLabel) {
+        const fallbackCode = Math.random().toString(36).slice(2, 6).toUpperCase();
+        nextLabel = `Visitor ${fallbackCode} (Guest)`;
+      }
+
+      guestLabelMapRef.current[guestId] = nextLabel;
+      persistGuestLabelState();
+
+      return nextLabel;
+    };
+
+    const mapVerifiedDirectoryUsers = (directoryResult, meUserId) =>
       Array.isArray(directoryResult?.users)
         ? directoryResult.users
             .map((user) => toBoardUser(user))
             .filter((user) => !isDummySeedUser(user))
-            .filter((user) => (meUserId ? user.id !== meUserId : true))
+            .filter((user) =>
+              meUserId ? getIdKey(user.id) !== getIdKey(meUserId) : true
+            )
         : [];
+
+    loadGuestLabelState();
 
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
 
       try {
-        if (!accessToken) {
-          const directoryResult = await getUsersDirectory({
-            includeMe: false,
-            page: 1,
-            limit: 100,
-          });
+        const requestAccessToken = accessToken || undefined;
+        const shouldLoadMe = Boolean(accessToken);
+        const requests = shouldLoadMe
+          ? [
+              getUsersMe({ accessToken: requestAccessToken }),
+              getUsersDirectory({
+                accessToken: requestAccessToken,
+                includeMe: false,
+                page: 1,
+                limit: 100,
+              }),
+              getPresenceBootstrap({ accessToken: requestAccessToken }),
+            ]
+          : [
+              getUsersDirectory({
+                includeMe: false,
+                page: 1,
+                limit: 100,
+              }),
+              getPresenceBootstrap({}),
+            ];
 
-          if (!active) {
-            return;
-          }
-
-          const users = mapDirectoryUsers(directoryResult);
-          setCurrentUser(fallbackCurrentUser);
-          setDirectoryUsers(users);
-          setPeopleById(createPeopleById([fallbackCurrentUser, ...users]));
-          return;
-        }
-
-        const [meResult, directoryResult] = await Promise.all([
-          getUsersMe({ accessToken }),
-          getUsersDirectory({
-            accessToken,
-            includeMe: false,
-            page: 1,
-            limit: 100,
-          }),
-        ]);
+        const responses = await Promise.all(requests);
 
         if (!active) {
           return;
         }
 
-        const meUser = toBoardUser(meResult?.user, fallbackCurrentUser);
-        const users = mapDirectoryUsers(directoryResult, meUser.id);
+        const meResult = shouldLoadMe ? responses[0] : null;
+        const directoryResult = shouldLoadMe ? responses[1] : responses[0];
+        const presenceBootstrap = shouldLoadMe ? responses[2] : responses[1];
+        const presenceViewer = presenceBootstrap?.viewer || null;
+        const presenceTopic = presenceBootstrap?.topic || "";
 
-        setCurrentUser(meUser);
-        setDirectoryUsers(users);
-        setPeopleById(createPeopleById([meUser, ...users]));
+        const meUser = meResult?.user
+          ? toBoardUser(meResult.user, fallbackCurrentUser)
+          : null;
+        const guestSelfId =
+          typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
+            ? presenceViewer.actorId.trim()
+            : `g:self-${Date.now()}`;
+        const guestSelfUser = toBoardUser(
+          { id: guestSelfId, name: fallbackCurrentUser.name },
+          {
+            ...fallbackCurrentUser,
+            id: guestSelfId,
+            role: "Guest",
+            presence: "Online now",
+          },
+        );
+        const resolvedCurrentUser = meUser || guestSelfUser;
+        const verifiedDirectoryUsers = mapVerifiedDirectoryUsers(
+          directoryResult,
+          resolvedCurrentUser.id,
+        );
+        const verifiedUsersById = new Map(
+          verifiedDirectoryUsers
+            .filter((user) => typeof user.id === "number")
+            .map((user) => [user.id, user]),
+        );
+        const fallbackAudienceUsers = verifiedDirectoryUsers.filter(
+          (user) => getIdKey(user.id) !== getIdKey(resolvedCurrentUser.id),
+        );
+
+        setCurrentUser(resolvedCurrentUser);
+        setDirectoryUsers(fallbackAudienceUsers);
+        setPeopleById(createPeopleById([resolvedCurrentUser, ...verifiedDirectoryUsers]));
+
+        if (!presenceTopic || !isRealtimePresenceConfigured()) {
+          setSelectedUserIds((currentSelection) =>
+            currentSelection.filter((id) =>
+              fallbackAudienceUsers.some((user) => getIdKey(user.id) === getIdKey(id)),
+            ),
+          );
+          return;
+        }
+
+        const viewerActorId =
+          typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
+            ? presenceViewer.actorId.trim()
+            : typeof resolvedCurrentUser.id === "number"
+              ? `u:${resolvedCurrentUser.id}`
+              : String(resolvedCurrentUser.id);
+        const guestIdFromBootstrap =
+          typeof presenceBootstrap?.presence?.guestId === "string" &&
+          presenceBootstrap.presence.guestId.trim()
+            ? presenceBootstrap.presence.guestId.trim()
+            : resolveGuestIdFromPresenceActor({ actorId: viewerActorId });
+        const presenceKeyBase =
+          typeof presenceBootstrap?.presence?.presenceKeyBase === "string" &&
+          presenceBootstrap.presence.presenceKeyBase.trim()
+            ? presenceBootstrap.presence.presenceKeyBase.trim()
+            : viewerActorId;
+
+        const presencePayload = {
+          actorType: presenceViewer?.actorType === "user" ? "user" : "guest",
+          actorId: viewerActorId,
+          userId: typeof resolvedCurrentUser.id === "number" ? resolvedCurrentUser.id : null,
+          guestId: guestIdFromBootstrap || null,
+          name: resolvedCurrentUser.name,
+          verified: Boolean(presenceViewer?.user?.emailVerifiedAt),
+          onlineAt: new Date().toISOString(),
+        };
+
+        unsubscribePresence = subscribeToPresenceChannel({
+          topic: presenceTopic,
+          presenceKey: createPresenceSessionKey(presenceKeyBase),
+          payload: presencePayload,
+          onPresenceSync: (presenceState) => {
+            if (!active) {
+              return;
+            }
+
+            const actors = flattenPresenceEntries(presenceState);
+            const uniqueActors = new Map();
+            actors.forEach((actor) => {
+              if (!uniqueActors.has(actor.actorId)) {
+                uniqueActors.set(actor.actorId, actor);
+              }
+            });
+
+            const onlineUsers = [];
+
+            uniqueActors.forEach((actor) => {
+              if (actor.actorId === viewerActorId) {
+                return;
+              }
+
+              if (actor.actorType === "user") {
+                const userId = resolveUserIdFromPresenceActor(actor);
+                if (!Number.isInteger(userId)) {
+                  return;
+                }
+
+                const verifiedUser = verifiedUsersById.get(userId);
+                if (!verifiedUser) {
+                  return;
+                }
+
+                onlineUsers.push(verifiedUser);
+                return;
+              }
+
+              const guestId = resolveGuestIdFromPresenceActor(actor);
+              if (!guestId) {
+                return;
+              }
+
+              const label = getGuestLabel(guestId);
+              const guestActorId = actor.actorId || `g:${guestId}`;
+
+              onlineUsers.push(
+                toBoardUser(
+                  {
+                    id: guestActorId,
+                    name: label,
+                  },
+                  {
+                    id: guestActorId,
+                    name: label,
+                    role: "Guest",
+                    presence: "Online now",
+                  },
+                ),
+              );
+            });
+
+            onlineUsers.sort((left, right) => {
+              const byName = left.name.localeCompare(right.name);
+              if (byName !== 0) return byName;
+
+              return getIdKey(left.id).localeCompare(getIdKey(right.id));
+            });
+
+            setDirectoryUsers(onlineUsers);
+            setPeopleById(
+              createPeopleById([resolvedCurrentUser, ...verifiedDirectoryUsers, ...onlineUsers]),
+            );
+            setSelectedUserIds((currentSelection) => {
+              const allowedIdKeys = new Set(onlineUsers.map((user) => getIdKey(user.id)));
+              return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
+            });
+          },
+        });
+
       } catch (_error) {
         if (!active) {
           return;
@@ -180,6 +544,7 @@ export function ShareBoardShell() {
 
     return () => {
       active = false;
+      void unsubscribePresence();
     };
   }, []);
 

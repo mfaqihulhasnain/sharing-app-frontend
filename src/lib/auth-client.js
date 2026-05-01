@@ -224,6 +224,12 @@ export async function getUsersDirectory({
   });
 }
 
+export async function getPresenceBootstrap({ accessToken } = {}) {
+  return requestWithAccessTokenRetry("/presence/bootstrap", {
+    accessToken,
+  });
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;
