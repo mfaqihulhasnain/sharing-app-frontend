@@ -55,9 +55,32 @@ const GUEST_NAME_NOUNS = [
   "Maple",
   "Harbor",
 ];
-const GUEST_LABEL_MAP_STORAGE_KEY = "sharing-board.guest-label-map";
 const PRESENCE_USER_ID_PATTERN = /^u:(\d+)$/;
 const PRESENCE_GUEST_ID_PATTERN = /^g:(.+)$/;
+
+function hashString(value) {
+  const normalizedValue = typeof value === "string" ? value : String(value || "");
+  let hash = 0;
+
+  for (let index = 0; index < normalizedValue.length; index += 1) {
+    hash = (hash * 31 + normalizedValue.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function getDeterministicGuestLabel(guestId) {
+  if (!guestId) {
+    return "Visitor (Guest)";
+  }
+
+  const adjectiveHash = hashString(guestId);
+  const nounHash = hashString(`${guestId}:noun`);
+  const adjective = GUEST_NAME_ADJECTIVES[adjectiveHash % GUEST_NAME_ADJECTIVES.length];
+  const noun = GUEST_NAME_NOUNS[nounHash % GUEST_NAME_NOUNS.length];
+
+  return `${adjective} ${noun} (Guest)`;
+}
 
 let nextAttachmentId = 1;
 let nextShareId =
@@ -249,83 +272,13 @@ export function ShareBoardShell() {
   const [isSharing, setIsSharing] = useState(false);
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
-  const guestLabelMapRef = useRef({});
 
   useEffect(() => {
     let active = true;
     let unsubscribePresence = async () => {};
 
-    const loadGuestLabelState = () => {
-      if (typeof window === "undefined") {
-        guestLabelMapRef.current = {};
-        return;
-      }
-
-      try {
-        const rawValue = window.sessionStorage.getItem(GUEST_LABEL_MAP_STORAGE_KEY);
-        const parsed = rawValue ? JSON.parse(rawValue) : {};
-        const restoredMap = parsed && typeof parsed === "object" ? parsed : {};
-        guestLabelMapRef.current = restoredMap;
-      } catch (_error) {
-        guestLabelMapRef.current = {};
-      }
-    };
-
-    const persistGuestLabelState = () => {
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      try {
-        window.sessionStorage.setItem(
-          GUEST_LABEL_MAP_STORAGE_KEY,
-          JSON.stringify(guestLabelMapRef.current),
-        );
-      } catch (_error) {
-        // Ignore storage-write errors in private mode or restrictive browsers.
-      }
-    };
-
     const getGuestLabel = (guestId) => {
-      if (!guestId) {
-        return "Visitor (Guest)";
-      }
-
-      const existingLabel = guestLabelMapRef.current[guestId];
-      const isLegacyNumberedLabel =
-        typeof existingLabel === "string" && /^Guest \d+$/.test(existingLabel);
-      if (existingLabel && !isLegacyNumberedLabel) {
-        return existingLabel;
-      }
-
-      const usedLabels = new Set(
-        Object.values(guestLabelMapRef.current).filter(
-          (value) => typeof value === "string" && value.trim(),
-        ),
-      );
-      const totalCombinations = GUEST_NAME_ADJECTIVES.length * GUEST_NAME_NOUNS.length;
-      let nextLabel = "";
-
-      for (let attempt = 0; attempt < totalCombinations; attempt += 1) {
-        const adjective =
-          GUEST_NAME_ADJECTIVES[Math.floor(Math.random() * GUEST_NAME_ADJECTIVES.length)];
-        const noun = GUEST_NAME_NOUNS[Math.floor(Math.random() * GUEST_NAME_NOUNS.length)];
-        const candidate = `${adjective} ${noun} (Guest)`;
-        if (!usedLabels.has(candidate)) {
-          nextLabel = candidate;
-          break;
-        }
-      }
-
-      if (!nextLabel) {
-        const fallbackCode = Math.random().toString(36).slice(2, 6).toUpperCase();
-        nextLabel = `Visitor ${fallbackCode} (Guest)`;
-      }
-
-      guestLabelMapRef.current[guestId] = nextLabel;
-      persistGuestLabelState();
-
-      return nextLabel;
+      return getDeterministicGuestLabel(guestId);
     };
 
     const mapVerifiedDirectoryUsers = (directoryResult, meUserId) =>
@@ -337,8 +290,6 @@ export function ShareBoardShell() {
               meUserId ? getIdKey(user.id) !== getIdKey(meUserId) : true
             )
         : [];
-
-    loadGuestLabelState();
 
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
@@ -385,8 +336,12 @@ export function ShareBoardShell() {
           typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
             ? presenceViewer.actorId.trim()
             : `g:self-${Date.now()}`;
+        const guestSelfLabel =
+          presenceViewer?.actorType === "guest"
+            ? getGuestLabel(resolveGuestIdFromPresenceActor({ actorId: guestSelfId }))
+            : fallbackCurrentUser.name;
         const guestSelfUser = toBoardUser(
-          { id: guestSelfId, name: fallbackCurrentUser.name },
+          { id: guestSelfId, name: guestSelfLabel },
           {
             ...fallbackCurrentUser,
             id: guestSelfId,
