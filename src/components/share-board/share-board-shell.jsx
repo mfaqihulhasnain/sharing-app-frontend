@@ -14,8 +14,6 @@ import {
 import {
   currentUser as fallbackCurrentUser,
   initialShares,
-  onlineUsers as fallbackOnlineUsers,
-  peopleById as fallbackPeopleById,
 } from "@/lib/mock-data";
 import { canUserSeeShare } from "@/lib/utils";
 
@@ -96,11 +94,17 @@ function createPeopleById(people) {
   }, {});
 }
 
+function isDummySeedUser(user) {
+  return typeof user?.email === "string" && user.email.endsWith("@sharing.local");
+}
+
 export function ShareBoardShell() {
   const [shares, setShares] = useState(initialShares);
   const [currentUser, setCurrentUser] = useState(fallbackCurrentUser);
-  const [directoryUsers, setDirectoryUsers] = useState(fallbackOnlineUsers);
-  const [peopleById, setPeopleById] = useState(fallbackPeopleById);
+  const [directoryUsers, setDirectoryUsers] = useState([]);
+  const [peopleById, setPeopleById] = useState(() =>
+    createPeopleById([fallbackCurrentUser])
+  );
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -114,6 +118,8 @@ export function ShareBoardShell() {
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
       if (!accessToken) {
+        setDirectoryUsers([]);
+        setPeopleById(createPeopleById([fallbackCurrentUser]));
         return;
       }
 
@@ -136,6 +142,7 @@ export function ShareBoardShell() {
         const users = Array.isArray(directoryResult?.users)
           ? directoryResult.users
               .map((user) => toBoardUser(user))
+              .filter((user) => !isDummySeedUser(user))
               .filter((user) => user.id !== meUser.id)
           : [];
 
@@ -148,8 +155,8 @@ export function ShareBoardShell() {
         }
 
         setCurrentUser(fallbackCurrentUser);
-        setDirectoryUsers(fallbackOnlineUsers);
-        setPeopleById(fallbackPeopleById);
+        setDirectoryUsers([]);
+        setPeopleById(createPeopleById([fallbackCurrentUser]));
       }
     };
 
