@@ -30,29 +30,27 @@ const USER_ACCENT_GRADIENTS = [
   "from-emerald-400 to-teal-500",
   "from-indigo-400 to-blue-500",
 ];
-const GUEST_NAME_ADJECTIVES = [
-  "Swift",
-  "Calm",
-  "Bright",
-  "Brisk",
-  "Merry",
-  "Gentle",
-  "Lucky",
-  "Bold",
-  "Cozy",
-  "Sunny",
-];
-const GUEST_NAME_NOUNS = [
-  "Sparrow",
-  "Falcon",
-  "Otter",
-  "Comet",
-  "Pine",
-  "River",
-  "Nimbus",
-  "Dawn",
-  "Maple",
-  "Harbor",
+const GUEST_DISPLAY_NAMES = [
+  "Alex",
+  "Avery",
+  "Blake",
+  "Cameron",
+  "Casey",
+  "Dakota",
+  "Elliot",
+  "Emerson",
+  "Finley",
+  "Harper",
+  "Jamie",
+  "Jordan",
+  "Kai",
+  "Logan",
+  "Morgan",
+  "Parker",
+  "Quinn",
+  "Reese",
+  "Riley",
+  "Taylor",
 ];
 const PRESENCE_USER_ID_PATTERN = /^u:(\d+)$/;
 const PRESENCE_GUEST_ID_PATTERN = /^g:(.+)$/;
@@ -69,16 +67,12 @@ function hashString(value) {
 }
 
 function getDeterministicGuestLabel(guestId) {
-  if (!guestId) {
-    return "Visitor (Guest)";
-  }
+  const baseName =
+    guestId && GUEST_DISPLAY_NAMES.length
+      ? GUEST_DISPLAY_NAMES[hashString(guestId) % GUEST_DISPLAY_NAMES.length]
+      : GUEST_DISPLAY_NAMES[0] || "Guest";
 
-  const adjectiveHash = hashString(guestId);
-  const nounHash = hashString(`${guestId}:noun`);
-  const adjective = GUEST_NAME_ADJECTIVES[adjectiveHash % GUEST_NAME_ADJECTIVES.length];
-  const noun = GUEST_NAME_NOUNS[nounHash % GUEST_NAME_NOUNS.length];
-
-  return `${adjective} ${noun} (Guest)`;
+  return `${baseName} (Guest)`;
 }
 
 let nextAttachmentId = 1;
