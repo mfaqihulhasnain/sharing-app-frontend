@@ -115,15 +115,36 @@ export function ShareBoardShell() {
   useEffect(() => {
     let active = true;
 
+    const mapDirectoryUsers = (directoryResult, meUserId) =>
+      Array.isArray(directoryResult?.users)
+        ? directoryResult.users
+            .map((user) => toBoardUser(user))
+            .filter((user) => !isDummySeedUser(user))
+            .filter((user) => (meUserId ? user.id !== meUserId : true))
+        : [];
+
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
-      if (!accessToken) {
-        setDirectoryUsers([]);
-        setPeopleById(createPeopleById([fallbackCurrentUser]));
-        return;
-      }
 
       try {
+        if (!accessToken) {
+          const directoryResult = await getUsersDirectory({
+            includeMe: false,
+            page: 1,
+            limit: 100,
+          });
+
+          if (!active) {
+            return;
+          }
+
+          const users = mapDirectoryUsers(directoryResult);
+          setCurrentUser(fallbackCurrentUser);
+          setDirectoryUsers(users);
+          setPeopleById(createPeopleById([fallbackCurrentUser, ...users]));
+          return;
+        }
+
         const [meResult, directoryResult] = await Promise.all([
           getUsersMe({ accessToken }),
           getUsersDirectory({
@@ -139,12 +160,7 @@ export function ShareBoardShell() {
         }
 
         const meUser = toBoardUser(meResult?.user, fallbackCurrentUser);
-        const users = Array.isArray(directoryResult?.users)
-          ? directoryResult.users
-              .map((user) => toBoardUser(user))
-              .filter((user) => !isDummySeedUser(user))
-              .filter((user) => user.id !== meUser.id)
-          : [];
+        const users = mapDirectoryUsers(directoryResult, meUser.id);
 
         setCurrentUser(meUser);
         setDirectoryUsers(users);
