@@ -50,7 +50,7 @@ function downloadSharedFile(file) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function ShareItemCard({ item, person, peopleById }) {
+export function ShareItemCard({ item, person, peopleById, viewerUserId }) {
   const text = item.text?.trim() || "";
   const files = item.files || [];
   const hasText = Boolean(text);
@@ -76,7 +76,12 @@ export function ShareItemCard({ item, person, peopleById }) {
   };
 
   return (
-    <BoardItemCard item={item} person={person} peopleById={peopleById}>
+    <BoardItemCard
+      item={item}
+      person={person}
+      peopleById={peopleById}
+      viewerUserId={viewerUserId}
+    >
       {hasText && (
         <section className={cn("space-y-1", isMixedPost && "space-y-0.5")}>
           <p className="whitespace-pre-wrap text-[14px] leading-[1.55] text-foreground/95">

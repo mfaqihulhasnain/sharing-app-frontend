@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "@/components/share-board/empty-state";
 import { ShareItemCard } from "@/components/share-board/share-item-card";
 
-export function SharedBoard({ items, peopleById }) {
+export function SharedBoard({ items, peopleById, viewerUserId }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between px-1">
@@ -24,7 +24,11 @@ export function SharedBoard({ items, peopleById }) {
         <div className="space-y-2.5">
           <AnimatePresence initial={false}>
             {items.map((item) => {
-              const person = peopleById[item.senderId];
+              const person = peopleById[item.senderId] || {
+                id: item.senderId,
+                name: "Unknown user",
+                accent: "from-slate-400 to-slate-500",
+              };
               const normalizedItem = {
                 ...item,
                 text: typeof item.text === "string" ? item.text : "",
@@ -48,6 +52,7 @@ export function SharedBoard({ items, peopleById }) {
                     item={normalizedItem}
                     person={person}
                     peopleById={peopleById}
+                    viewerUserId={viewerUserId}
                   />
                 </motion.div>
               );

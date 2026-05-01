@@ -84,16 +84,19 @@ async function refreshAccessToken() {
   return nextAccessToken;
 }
 
-export async function getCurrentUser({ accessToken }) {
+async function requestWithAccessTokenRetry(path, { accessToken, method = "GET", body } = {}) {
+  const buildOptions = (token) => ({
+    method,
+    headers: token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {},
+    ...(body !== undefined ? { body } : {}),
+  });
+
   try {
-    return await request("/auth/me", {
-      method: "GET",
-      headers: accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        : {},
-    });
+    return await request(path, buildOptions(accessToken));
   } catch (error) {
     if (!(error instanceof AuthRequestError) || error.statusCode !== 401) {
       throw error;
@@ -104,13 +107,14 @@ export async function getCurrentUser({ accessToken }) {
       throw error;
     }
 
-    return request("/auth/me", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${refreshedAccessToken}`,
-      },
-    });
+    return request(path, buildOptions(refreshedAccessToken));
   }
+}
+
+export async function getCurrentUser({ accessToken }) {
+  return requestWithAccessTokenRetry("/auth/me", {
+    accessToken,
+  });
 }
 
 export async function logoutSession({ accessToken } = {}) {
@@ -193,6 +197,31 @@ export async function bootstrapSessionFromRefresh() {
   }
 
   return refreshedAccessToken;
+}
+
+export async function getUsersMe({ accessToken }) {
+  return requestWithAccessTokenRetry("/users/me", {
+    accessToken,
+  });
+}
+
+export async function getUsersDirectory({
+  accessToken,
+  q = "",
+  page = 1,
+  limit = 20,
+  includeMe = false,
+} = {}) {
+  const query = new URLSearchParams({
+    q: String(q || ""),
+    page: String(page),
+    limit: String(limit),
+    includeMe: String(includeMe),
+  });
+
+  return requestWithAccessTokenRetry(`/users?${query.toString()}`, {
+    accessToken,
+  });
 }
 
 export function persistAccessToken(token, { remember = true } = {}) {

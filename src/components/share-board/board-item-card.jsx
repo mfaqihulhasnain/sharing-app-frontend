@@ -1,7 +1,6 @@
 import { Clock3, Globe2, Users2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { currentUser } from "@/lib/mock-data";
 import { cn, formatTimestamp, getInitials } from "@/lib/utils";
 
 function getVisibilityInfo(item, peopleById) {
@@ -43,6 +42,7 @@ export function BoardItemCard({
   item,
   person,
   peopleById,
+  viewerUserId,
   children,
 }) {
   const visibility = getVisibilityInfo(item, peopleById);
@@ -66,7 +66,7 @@ export function BoardItemCard({
                 <p className="truncate text-sm font-semibold leading-none tracking-tight text-foreground">
                   {person.name}
                 </p>
-                {item.senderId === currentUser.id && (
+                {Number.isFinite(viewerUserId) && item.senderId === viewerUserId && (
                   <Badge variant="accent" className="px-1.5 py-0.5 text-[10px]">
                     You
                   </Badge>

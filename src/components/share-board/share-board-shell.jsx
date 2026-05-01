@@ -1,18 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EnterpriseNavbar } from "@/components/navigation/enterprise-navbar";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
 import {
-  currentUser,
+  getStoredAccessToken,
+  getUsersDirectory,
+  getUsersMe,
+} from "@/lib/auth-client";
+import {
+  currentUser as fallbackCurrentUser,
   initialShares,
-  onlineUsers,
-  peopleById,
+  onlineUsers as fallbackOnlineUsers,
+  peopleById as fallbackPeopleById,
 } from "@/lib/mock-data";
 import { canUserSeeShare } from "@/lib/utils";
+
+const USER_ACCENT_GRADIENTS = [
+  "from-sky-500 to-cyan-400",
+  "from-amber-400 to-orange-500",
+  "from-rose-400 to-pink-500",
+  "from-violet-400 to-fuchsia-500",
+  "from-emerald-400 to-teal-500",
+  "from-indigo-400 to-blue-500",
+];
 
 let nextAttachmentId = 1;
 let nextShareId =
@@ -49,8 +63,44 @@ function wait(ms) {
   });
 }
 
+function getAccentForUserId(id) {
+  if (!Number.isFinite(id)) {
+    return USER_ACCENT_GRADIENTS[0];
+  }
+
+  const index = Math.abs(Number(id)) % USER_ACCENT_GRADIENTS.length;
+  return USER_ACCENT_GRADIENTS[index];
+}
+
+function toBoardUser(user, fallback = {}) {
+  const resolvedId = Number.isFinite(user?.id) ? Number(user.id) : fallback.id || 0;
+  const resolvedName =
+    typeof user?.name === "string" && user.name.trim()
+      ? user.name.trim()
+      : fallback.name || "Unknown user";
+
+  return {
+    id: resolvedId,
+    name: resolvedName,
+    role: fallback.role || "Team member",
+    presence: fallback.presence || "Available",
+    accent: getAccentForUserId(resolvedId),
+    email: user?.email || "",
+  };
+}
+
+function createPeopleById(people) {
+  return people.reduce((accumulator, person) => {
+    accumulator[person.id] = person;
+    return accumulator;
+  }, {});
+}
+
 export function ShareBoardShell() {
   const [shares, setShares] = useState(initialShares);
+  const [currentUser, setCurrentUser] = useState(fallbackCurrentUser);
+  const [directoryUsers, setDirectoryUsers] = useState(fallbackOnlineUsers);
+  const [peopleById, setPeopleById] = useState(fallbackPeopleById);
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -58,7 +108,63 @@ export function ShareBoardShell() {
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
 
-  const selectedUsers = onlineUsers.filter((user) => selectedUserIds.includes(user.id));
+  useEffect(() => {
+    let active = true;
+
+    const loadLiveUsers = async () => {
+      const accessToken = getStoredAccessToken();
+      if (!accessToken) {
+        return;
+      }
+
+      try {
+        const [meResult, directoryResult] = await Promise.all([
+          getUsersMe({ accessToken }),
+          getUsersDirectory({
+            accessToken,
+            includeMe: false,
+            page: 1,
+            limit: 100,
+          }),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        const meUser = toBoardUser(meResult?.user, fallbackCurrentUser);
+        const users = Array.isArray(directoryResult?.users)
+          ? directoryResult.users
+              .map((user) => toBoardUser(user))
+              .filter((user) => user.id !== meUser.id)
+          : [];
+
+        setCurrentUser(meUser);
+        setDirectoryUsers(users);
+        setPeopleById(createPeopleById([meUser, ...users]));
+      } catch (_error) {
+        if (!active) {
+          return;
+        }
+
+        setCurrentUser(fallbackCurrentUser);
+        setDirectoryUsers(fallbackOnlineUsers);
+        setPeopleById(fallbackPeopleById);
+      }
+    };
+
+    loadLiveUsers();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selectedUsers = useMemo(
+    () => directoryUsers.filter((user) => selectedUserIds.includes(user.id)),
+    [directoryUsers, selectedUserIds]
+  );
+
   const visibleShares = shares
     .filter((item) => canUserSeeShare(item, currentUser.id))
     .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
@@ -101,7 +207,7 @@ export function ShareBoardShell() {
 
     const createdAt = new Date().toISOString();
     const audienceIds = [...selectedUserIds];
-    const destinationNames = onlineUsers
+    const destinationNames = directoryUsers
       .filter((user) => audienceIds.includes(user.id))
       .map((user) => user.name);
     const newShare = {
@@ -183,13 +289,17 @@ export function ShareBoardShell() {
                 onOpenAudience={handleOpenAudience}
               />
             </div>
-            <SharedBoard items={visibleShares} peopleById={peopleById} />
+            <SharedBoard
+              items={visibleShares}
+              peopleById={peopleById}
+              viewerUserId={currentUser.id}
+            />
           </div>
 
           <aside ref={sidebarRef}>
             <UsersSidebar
               currentUser={currentUser}
-              users={onlineUsers}
+              users={directoryUsers}
               selectedUserIds={selectedUserIds}
               onToggleUser={toggleUser}
             />
