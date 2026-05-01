@@ -9,7 +9,6 @@ import { UsersSidebar } from "@/components/share-board/users-sidebar";
 import {
   getPresenceBootstrap,
   getStoredAccessToken,
-  getUsersDirectory,
   getUsersMe,
 } from "@/lib/auth-client";
 import {
@@ -173,10 +172,6 @@ function createPeopleById(people) {
   return peopleById;
 }
 
-function isDummySeedUser(user) {
-  return typeof user?.email === "string" && user.email.endsWith("@sharing.local");
-}
-
 function getIdKey(id) {
   if (typeof id === "number" && Number.isFinite(id)) return String(id);
   if (typeof id === "string" && id.trim()) return id.trim();
@@ -214,6 +209,10 @@ function flattenPresenceEntries(presenceState) {
       actors.push({
         actorId,
         actorType: meta.actorType === "user" ? "user" : "guest",
+        name:
+          typeof meta.name === "string" && meta.name.trim()
+            ? meta.name.trim()
+            : "",
         userId:
           typeof meta.userId === "number" && Number.isInteger(meta.userId)
             ? meta.userId
@@ -281,16 +280,6 @@ export function ShareBoardShell() {
       return getDeterministicGuestLabel(guestId);
     };
 
-    const mapVerifiedDirectoryUsers = (directoryResult, meUserId) =>
-      Array.isArray(directoryResult?.users)
-        ? directoryResult.users
-            .map((user) => toBoardUser(user))
-            .filter((user) => !isDummySeedUser(user))
-            .filter((user) =>
-              meUserId ? getIdKey(user.id) !== getIdKey(meUserId) : true
-            )
-        : [];
-
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
 
@@ -300,22 +289,9 @@ export function ShareBoardShell() {
         const requests = shouldLoadMe
           ? [
               getUsersMe({ accessToken: requestAccessToken }),
-              getUsersDirectory({
-                accessToken: requestAccessToken,
-                includeMe: false,
-                page: 1,
-                limit: 100,
-              }),
               getPresenceBootstrap({ accessToken: requestAccessToken }),
             ]
-          : [
-              getUsersDirectory({
-                includeMe: false,
-                page: 1,
-                limit: 100,
-              }),
-              getPresenceBootstrap({}),
-            ];
+          : [getPresenceBootstrap({})];
 
         const responses = await Promise.all(requests);
 
@@ -324,8 +300,7 @@ export function ShareBoardShell() {
         }
 
         const meResult = shouldLoadMe ? responses[0] : null;
-        const directoryResult = shouldLoadMe ? responses[1] : responses[0];
-        const presenceBootstrap = shouldLoadMe ? responses[2] : responses[1];
+        const presenceBootstrap = shouldLoadMe ? responses[1] : responses[0];
         const presenceViewer = presenceBootstrap?.viewer || null;
         const presenceTopic = presenceBootstrap?.topic || "";
 
@@ -350,29 +325,13 @@ export function ShareBoardShell() {
           },
         );
         const resolvedCurrentUser = meUser || guestSelfUser;
-        const verifiedDirectoryUsers = mapVerifiedDirectoryUsers(
-          directoryResult,
-          resolvedCurrentUser.id,
-        );
-        const verifiedUsersById = new Map(
-          verifiedDirectoryUsers
-            .filter((user) => typeof user.id === "number")
-            .map((user) => [user.id, user]),
-        );
-        const fallbackAudienceUsers = verifiedDirectoryUsers.filter(
-          (user) => getIdKey(user.id) !== getIdKey(resolvedCurrentUser.id),
-        );
 
         setCurrentUser(resolvedCurrentUser);
-        setPeopleById(createPeopleById([resolvedCurrentUser, ...verifiedDirectoryUsers]));
+        setDirectoryUsers([]);
+        setPeopleById(createPeopleById([resolvedCurrentUser]));
 
         if (!presenceTopic || !isRealtimePresenceConfigured()) {
-          setDirectoryUsers(fallbackAudienceUsers);
-          setSelectedUserIds((currentSelection) =>
-            currentSelection.filter((id) =>
-              fallbackAudienceUsers.some((user) => getIdKey(user.id) === getIdKey(id)),
-            ),
-          );
+          setSelectedUserIds([]);
           return;
         }
 
@@ -429,16 +388,26 @@ export function ShareBoardShell() {
 
               if (actor.actorType === "user") {
                 const userId = resolveUserIdFromPresenceActor(actor);
-                if (!Number.isInteger(userId)) {
-                  return;
-                }
+                const actorName =
+                  typeof actor.name === "string" && actor.name.trim()
+                    ? actor.name.trim()
+                    : "Team member";
+                const actorUserId = Number.isInteger(userId) ? userId : actor.actorId;
 
-                const verifiedUser = verifiedUsersById.get(userId);
-                if (!verifiedUser) {
-                  return;
-                }
-
-                onlineUsers.push(verifiedUser);
+                onlineUsers.push(
+                  toBoardUser(
+                    {
+                      id: actorUserId,
+                      name: actorName,
+                    },
+                    {
+                      id: actorUserId,
+                      name: actorName,
+                      role: "Team member",
+                      presence: "Online now",
+                    },
+                  ),
+                );
                 return;
               }
 
@@ -475,7 +444,7 @@ export function ShareBoardShell() {
 
             setDirectoryUsers(onlineUsers);
             setPeopleById(
-              createPeopleById([resolvedCurrentUser, ...verifiedDirectoryUsers, ...onlineUsers]),
+              createPeopleById([resolvedCurrentUser, ...onlineUsers]),
             );
             setSelectedUserIds((currentSelection) => {
               const allowedIdKeys = new Set(onlineUsers.map((user) => getIdKey(user.id)));
