@@ -45,6 +45,7 @@ export function subscribeToPresenceChannel({
   payload,
   onPresenceSync,
   onStatusChange,
+  onBroadcast,
 }) {
   const client = getRealtimeClient();
   if (!client) {
@@ -67,7 +68,13 @@ export function subscribeToPresenceChannel({
   channel
     .on("presence", { event: "sync" }, publishCurrentState)
     .on("presence", { event: "join" }, publishCurrentState)
-    .on("presence", { event: "leave" }, publishCurrentState);
+    .on("presence", { event: "leave" }, publishCurrentState)
+    .on("broadcast", { event: "*" }, (message) => {
+      onBroadcast?.(
+        typeof message?.event === "string" ? message.event : "",
+        message?.payload
+      );
+    });
 
   channel.subscribe(async (status) => {
     onStatusChange?.(status);

@@ -60,6 +60,7 @@ let runtimeGeneration = 0;
 let runtimeSequence = Promise.resolve();
 let unsubscribePresence = async () => {};
 const listeners = new Set();
+const shareEventListeners = new Set();
 
 function hashString(value) {
   const normalizedValue = typeof value === "string" ? value : String(value || "");
@@ -230,6 +231,12 @@ function toInternalStatus(status) {
 function emit() {
   listeners.forEach((listener) => {
     listener();
+  });
+}
+
+function emitShareEvent(event) {
+  shareEventListeners.forEach((listener) => {
+    listener(event);
   });
 }
 
@@ -430,6 +437,21 @@ async function bootstrapAndSubscribe(generation) {
         viewerActorId,
       });
     },
+    onBroadcast: (event, payload) => {
+      if (!runtimeStarted || generation !== runtimeGeneration) {
+        return;
+      }
+
+      if (!event) {
+        return;
+      }
+
+      emitShareEvent({
+        event,
+        payload,
+        topic: presenceTopic,
+      });
+    },
   });
 }
 
@@ -522,6 +544,17 @@ export function subscribePresenceState(listener) {
 
 export function readPresenceState() {
   return state;
+}
+
+export function subscribePresenceShareEvents(listener) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+
+  shareEventListeners.add(listener);
+  return () => {
+    shareEventListeners.delete(listener);
+  };
 }
 
 export function usePresenceState() {

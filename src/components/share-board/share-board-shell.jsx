@@ -1,31 +1,23 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EnterpriseNavbar } from "@/components/navigation/enterprise-navbar";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
-import { currentUser as fallbackCurrentUser, initialShares } from "@/lib/mock-data";
-import { usePresenceState } from "@/lib/presence-store";
-import { canUserSeeShare } from "@/lib/utils";
+import { createShare, getShares, getStoredAccessToken } from "@/lib/auth-client";
+import { currentUser as fallbackCurrentUser } from "@/lib/mock-data";
+import {
+  subscribePresenceShareEvents,
+  usePresenceState,
+} from "@/lib/presence-store";
 
 let nextAttachmentId = 1;
-let nextShareId =
-  initialShares.reduce(
-    (maxId, share) => Math.max(maxId, Number(share.id) || 0),
-    0,
-  ) + 1;
 
 function allocateAttachmentId() {
   const id = nextAttachmentId;
   nextAttachmentId += 1;
-  return id;
-}
-
-function allocateShareId() {
-  const id = nextShareId;
-  nextShareId += 1;
   return id;
 }
 
@@ -51,21 +43,144 @@ function getIdKey(id) {
   return "";
 }
 
+const USER_ACCENT_GRADIENTS = [
+  "from-sky-500 to-cyan-400",
+  "from-amber-400 to-orange-500",
+  "from-rose-400 to-pink-500",
+  "from-violet-400 to-fuchsia-500",
+  "from-emerald-400 to-teal-500",
+  "from-indigo-400 to-blue-500",
+];
+
+function hashString(value) {
+  const normalized = typeof value === "string" ? value : String(value || "");
+  let hash = 0;
+
+  for (let index = 0; index < normalized.length; index += 1) {
+    hash = (hash * 31 + normalized.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function getAccentForId(id) {
+  const key = getIdKey(id);
+  const index = key ? hashString(key) % USER_ACCENT_GRADIENTS.length : 0;
+  return USER_ACCENT_GRADIENTS[index];
+}
+
+function toActorId(userId) {
+  if (typeof userId === "number" && Number.isInteger(userId)) {
+    return `u:${userId}`;
+  }
+
+  const normalizedId = getIdKey(userId);
+  if (!normalizedId) {
+    return "";
+  }
+
+  if (normalizedId.startsWith("u:") || normalizedId.startsWith("g:")) {
+    return normalizedId;
+  }
+
+  return normalizedId;
+}
+
+function toBoardShare(share) {
+  if (!share || typeof share !== "object") {
+    return null;
+  }
+
+  const senderActorId = getIdKey(share.senderActorId);
+  if (!senderActorId) {
+    return null;
+  }
+
+  return {
+    id: share.id,
+    senderId: senderActorId,
+    createdAt: share.createdAt,
+    audienceIds: Array.isArray(share.audienceActorIds)
+      ? [...new Set(share.audienceActorIds.map((id) => getIdKey(id)).filter(Boolean))]
+      : [],
+    text: typeof share.text === "string" ? share.text : "",
+    files: [],
+    senderUser: share.senderUser || null,
+  };
+}
+
+function normalizeSharePayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  if (payload.share && typeof payload.share === "object") {
+    return payload.share;
+  }
+
+  return payload;
+}
+
+function sortShares(shares) {
+  return [...shares].sort((left, right) => {
+    const byDate = new Date(right.createdAt) - new Date(left.createdAt);
+    if (byDate !== 0) return byDate;
+    return getIdKey(right.id).localeCompare(getIdKey(left.id));
+  });
+}
+
+function mergeShares(currentShares, incomingShares) {
+  const map = new Map();
+
+  currentShares.forEach((share) => {
+    map.set(getIdKey(share.id), share);
+  });
+
+  incomingShares.forEach((share) => {
+    if (!share) return;
+    map.set(getIdKey(share.id), share);
+  });
+
+  return sortShares(Array.from(map.values()));
+}
+
+function buildShareSenderPerson(share) {
+  const senderId = getIdKey(share.senderId);
+  const senderName =
+    typeof share?.senderUser?.name === "string" && share.senderUser.name.trim()
+      ? share.senderUser.name.trim()
+      : senderId.startsWith("g:")
+        ? "Guest"
+        : "Team member";
+
+  return {
+    id: senderId,
+    name: senderName,
+    role: senderId.startsWith("g:") ? "Guest" : "Team member",
+    presence: "Online now",
+    accent: getAccentForId(senderId),
+    email: typeof share?.senderUser?.email === "string" ? share.senderUser.email : "",
+  };
+}
+
 export function ShareBoardShell() {
   const {
     currentUser: presenceCurrentUser,
     onlineUsers: directoryUsers,
     peopleById,
+    viewerActorId,
+    topic,
   } = usePresenceState();
   const currentUser = presenceCurrentUser || fallbackCurrentUser;
 
-  const [shares, setShares] = useState(initialShares);
+  const [shares, setShares] = useState([]);
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [isSharing, setIsSharing] = useState(false);
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
+  const viewerShareActorId = getIdKey(viewerActorId);
 
   const allowedIdKeys = useMemo(
     () => new Set(directoryUsers.map((user) => getIdKey(user.id))),
@@ -85,9 +200,71 @@ export function ShareBoardShell() {
     [directoryUsers, selectedIdKeys],
   );
 
-  const visibleShares = shares
-    .filter((item) => canUserSeeShare(item, currentUser.id))
-    .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
+  const boardPeopleById = useMemo(() => {
+    const combined = { ...peopleById };
+
+    shares.forEach((share) => {
+      const senderKey = getIdKey(share.senderId);
+      if (!senderKey || combined[senderKey]) {
+        return;
+      }
+
+      combined[senderKey] = buildShareSenderPerson(share);
+    });
+
+    return combined;
+  }, [peopleById, shares]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadShares = async () => {
+      try {
+        const data = await getShares({
+          accessToken: getStoredAccessToken() || undefined,
+          limit: 100,
+        });
+
+        if (!active) return;
+
+        const loadedShares = Array.isArray(data?.shares)
+          ? data.shares.map(toBoardShare).filter(Boolean)
+          : [];
+        setShares(sortShares(loadedShares));
+      } catch {
+        if (!active) return;
+        setShares([]);
+      }
+    };
+
+    void loadShares();
+
+    return () => {
+      active = false;
+    };
+  }, [viewerActorId]);
+
+  useEffect(() => {
+    const unsubscribe = subscribePresenceShareEvents((message) => {
+      if (!message || message.event !== "share_created") {
+        return;
+      }
+
+      if (topic && message.topic && message.topic !== topic) {
+        return;
+      }
+
+      const sharePayload = normalizeSharePayload(message.payload);
+      const boardShare = toBoardShare(sharePayload);
+      if (!boardShare) {
+        return;
+      }
+
+      setShares((currentShares) => mergeShares(currentShares, [boardShare]));
+    });
+
+    return unsubscribe;
+  }, [topic]);
 
   const toggleUser = (userId) => {
     const userIdKey = getIdKey(userId);
@@ -126,44 +303,85 @@ export function ShareBoardShell() {
       toast.error("Add a note or at least one file before sharing.");
       return;
     }
+    if (attachments.length > 0) {
+      toast.error("File upload backend is not enabled yet.");
+      return;
+    }
+    if (!viewerShareActorId) {
+      toast.error("Unable to resolve your sharing identity.");
+      return;
+    }
 
     setIsSharing(true);
     await wait(220);
 
     const createdAt = new Date().toISOString();
     const audienceIds = [...effectiveSelectedUserIds];
+    const audienceActorIds = [
+      ...new Set(audienceIds.map((id) => toActorId(id)).filter(Boolean)),
+    ];
     const selectedAudienceKeys = new Set(audienceIds.map((id) => getIdKey(id)));
     const destinationNames = directoryUsers
       .filter((user) => selectedAudienceKeys.has(getIdKey(user.id)))
       .map((user) => user.name);
+    const optimisticShareId = `temp:${Date.now()}`;
 
-    const newShare = {
-      id: allocateShareId(),
-      senderId: currentUser.id,
+    const optimisticShare = {
+      id: optimisticShareId,
+      senderId: viewerShareActorId,
       createdAt,
-      audienceIds,
+      audienceIds: audienceActorIds,
       text: trimmedText,
-      files: attachments.map((file) => ({
-        id: file.id,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type,
-        sourceFile: file.sourceFile,
-      })),
+      files: [],
+      senderUser:
+        typeof currentUser?.id === "number" && Number.isInteger(currentUser.id)
+          ? {
+              id: currentUser.id,
+              name: currentUser.name,
+              email: currentUser.email || "",
+            }
+          : null,
     };
 
-    setShares((currentShares) => [newShare, ...currentShares]);
-    setDraftText("");
-    setAttachments([]);
-    setSelectedUserIds([]);
-    setIsSharing(false);
+    setShares((currentShares) => mergeShares(currentShares, [optimisticShare]));
 
-    const destinationLabel =
-      audienceIds.length === 0
-        ? "everyone on the board"
-        : destinationNames.join(", ");
+    try {
+      const data = await createShare({
+        accessToken: getStoredAccessToken() || undefined,
+        text: trimmedText,
+        audienceActorIds,
+      });
+      const createdShare = toBoardShare(data?.share);
 
-    toast.success(`Shared with ${destinationLabel}`);
+      setShares((currentShares) => {
+        const withoutOptimistic = currentShares.filter(
+          (share) => getIdKey(share.id) !== optimisticShareId,
+        );
+        return createdShare
+          ? mergeShares(withoutOptimistic, [createdShare])
+          : withoutOptimistic;
+      });
+      setDraftText("");
+      setAttachments([]);
+      setSelectedUserIds([]);
+
+      const destinationLabel =
+        audienceIds.length === 0
+          ? "everyone on the board"
+          : destinationNames.join(", ");
+      toast.success(`Shared with ${destinationLabel}`);
+    } catch (error) {
+      setShares((currentShares) =>
+        currentShares.filter((share) => getIdKey(share.id) !== optimisticShareId),
+      );
+      toast.error(
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Unable to share right now.",
+      );
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const handleOpenAudience = () => {
@@ -210,15 +428,15 @@ export function ShareBoardShell() {
                   );
                 }}
                 onClearAudience={() => setSelectedUserIds([])}
-                peopleById={peopleById}
+                peopleById={boardPeopleById}
                 isSharing={isSharing}
                 onOpenAudience={handleOpenAudience}
               />
             </div>
             <SharedBoard
-              items={visibleShares}
-              peopleById={peopleById}
-              viewerUserId={currentUser.id}
+              items={shares}
+              peopleById={boardPeopleById}
+              viewerActorId={viewerShareActorId}
             />
           </div>
 

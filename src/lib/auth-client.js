@@ -316,6 +316,38 @@ export async function getPresenceBootstrap({ accessToken } = {}) {
   });
 }
 
+export async function getShares({
+  accessToken,
+  limit = 50,
+  before,
+} = {}) {
+  const query = new URLSearchParams({
+    limit: String(limit),
+  });
+  if (typeof before === "string" && before.trim()) {
+    query.set("before", before.trim());
+  }
+
+  return requestWithAccessTokenRetry(`/shares?${query.toString()}`, {
+    accessToken,
+  });
+}
+
+export async function createShare({
+  accessToken,
+  text,
+  audienceActorIds = [],
+}) {
+  return requestWithAccessTokenRetry("/shares", {
+    accessToken,
+    method: "POST",
+    body: JSON.stringify({
+      text,
+      audienceActorIds,
+    }),
+  });
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;

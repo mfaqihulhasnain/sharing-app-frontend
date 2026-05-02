@@ -3,6 +3,28 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn, formatTimestamp, getInitials } from "@/lib/utils";
 
+function getIdKey(id) {
+  if (typeof id === "number" && Number.isFinite(id)) return String(id);
+  if (typeof id === "string" && id.trim()) return id.trim();
+  return "";
+}
+
+function resolveAudiencePerson(peopleById, audienceId) {
+  const directKey = getIdKey(audienceId);
+  if (directKey && peopleById?.[directKey]) {
+    return peopleById[directKey];
+  }
+
+  if (typeof audienceId === "string" && audienceId.startsWith("u:")) {
+    const userId = audienceId.slice(2).trim();
+    if (userId && peopleById?.[userId]) {
+      return peopleById[userId];
+    }
+  }
+
+  return null;
+}
+
 function getVisibilityInfo(item, peopleById) {
   if (!item.audienceIds?.length) {
     return {
@@ -14,7 +36,7 @@ function getVisibilityInfo(item, peopleById) {
   }
 
   const names = item.audienceIds
-    .map((id) => peopleById?.[id]?.name)
+    .map((id) => resolveAudiencePerson(peopleById, id)?.name)
     .filter(Boolean);
 
   if (!names.length) {
@@ -42,11 +64,13 @@ export function BoardItemCard({
   item,
   person,
   peopleById,
-  viewerUserId,
+  viewerActorId,
   children,
 }) {
   const visibility = getVisibilityInfo(item, peopleById);
   const VisibilityIcon = visibility.icon;
+  const senderId = getIdKey(item.senderId);
+  const viewerId = getIdKey(viewerActorId);
 
   return (
     <Card className="rounded-2xl border-line bg-card-strong p-3.5 transition duration-200 hover:border-accent-border/60 sm:p-4">
@@ -66,7 +90,7 @@ export function BoardItemCard({
                 <p className="truncate text-sm font-semibold leading-none tracking-tight text-foreground">
                   {person.name}
                 </p>
-                {Number.isFinite(viewerUserId) && item.senderId === viewerUserId && (
+                {viewerId && senderId === viewerId && (
                   <Badge variant="accent" className="px-1.5 py-0.5 text-[10px]">
                     You
                   </Badge>
