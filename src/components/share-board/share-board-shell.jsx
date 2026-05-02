@@ -1,79 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EnterpriseNavbar } from "@/components/navigation/enterprise-navbar";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
-import {
-  getPresenceBootstrap,
-  getStoredAccessToken,
-  getUsersMe,
-} from "@/lib/auth-client";
-import {
-  currentUser as fallbackCurrentUser,
-  initialShares,
-} from "@/lib/mock-data";
-import {
-  createPresenceSessionKey,
-  isRealtimePresenceConfigured,
-  subscribeToPresenceChannel,
-} from "@/lib/realtime-presence";
+import { currentUser as fallbackCurrentUser, initialShares } from "@/lib/mock-data";
+import { usePresenceState } from "@/lib/presence-store";
 import { canUserSeeShare } from "@/lib/utils";
-
-const USER_ACCENT_GRADIENTS = [
-  "from-sky-500 to-cyan-400",
-  "from-amber-400 to-orange-500",
-  "from-rose-400 to-pink-500",
-  "from-violet-400 to-fuchsia-500",
-  "from-emerald-400 to-teal-500",
-  "from-indigo-400 to-blue-500",
-];
-const GUEST_DISPLAY_NAMES = [
-  "Alex",
-  "Avery",
-  "Blake",
-  "Cameron",
-  "Casey",
-  "Dakota",
-  "Elliot",
-  "Emerson",
-  "Finley",
-  "Harper",
-  "Jamie",
-  "Jordan",
-  "Kai",
-  "Logan",
-  "Morgan",
-  "Parker",
-  "Quinn",
-  "Reese",
-  "Riley",
-  "Taylor",
-];
-const PRESENCE_USER_ID_PATTERN = /^u:(\d+)$/;
-const PRESENCE_GUEST_ID_PATTERN = /^g:(.+)$/;
-
-function hashString(value) {
-  const normalizedValue = typeof value === "string" ? value : String(value || "");
-  let hash = 0;
-
-  for (let index = 0; index < normalizedValue.length; index += 1) {
-    hash = (hash * 31 + normalizedValue.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
-}
-
-function getDeterministicGuestLabel(guestId) {
-  const baseName =
-    guestId && GUEST_DISPLAY_NAMES.length
-      ? GUEST_DISPLAY_NAMES[hashString(guestId) % GUEST_DISPLAY_NAMES.length]
-      : GUEST_DISPLAY_NAMES[0] || "Guest";
-
-  return `${baseName} (Guest)`;
-}
 
 let nextAttachmentId = 1;
 let nextShareId =
@@ -110,191 +45,21 @@ function wait(ms) {
   });
 }
 
-function getAccentForUserId(id) {
-  if (typeof id === "number" && Number.isFinite(id)) {
-    const index = Math.abs(id) % USER_ACCENT_GRADIENTS.length;
-    return USER_ACCENT_GRADIENTS[index];
-  }
-
-  if (typeof id === "string" && id.trim()) {
-    const hash = id
-      .trim()
-      .split("")
-      .reduce((total, character) => total + character.charCodeAt(0), 0);
-    const index = Math.abs(hash) % USER_ACCENT_GRADIENTS.length;
-    return USER_ACCENT_GRADIENTS[index];
-  }
-
-  const index = 0;
-  return USER_ACCENT_GRADIENTS[index];
-}
-
-function toBoardUser(user, fallback = {}) {
-  const hasNumericId = typeof user?.id === "number" && Number.isFinite(user.id);
-  const hasStringId = typeof user?.id === "string" && user.id.trim().length > 0;
-  const resolvedId = hasNumericId
-    ? user.id
-    : hasStringId
-      ? user.id.trim()
-      : fallback.id || 0;
-  const resolvedName =
-    typeof user?.name === "string" && user.name.trim()
-      ? user.name.trim()
-      : fallback.name || "Unknown user";
-
-  return {
-    id: resolvedId,
-    name: resolvedName,
-    role: fallback.role || (typeof resolvedId === "string" ? "Guest" : "Team member"),
-    presence: fallback.presence || "Available",
-    accent: getAccentForUserId(resolvedId),
-    email: typeof user?.email === "string" ? user.email : "",
-  };
-}
-
-function createPeopleById(people) {
-  const peopleById = {};
-
-  people.forEach((person) => {
-    if (!person || person.id === undefined || person.id === null) {
-      return;
-    }
-
-    peopleById[String(person.id)] = person;
-  });
-
-  return peopleById;
-}
-
 function getIdKey(id) {
   if (typeof id === "number" && Number.isFinite(id)) return String(id);
   if (typeof id === "string" && id.trim()) return id.trim();
   return "";
 }
 
-let cachedPresenceSnapshot = {
-  topic: "",
-  viewerActorId: "",
-  currentUser: fallbackCurrentUser,
-  directoryUsers: [],
-  peopleById: createPeopleById([fallbackCurrentUser]),
-};
-
-function readCachedPresenceSnapshot() {
-  return {
-    topic: cachedPresenceSnapshot.topic,
-    viewerActorId: cachedPresenceSnapshot.viewerActorId,
-    currentUser: cachedPresenceSnapshot.currentUser,
-    directoryUsers: [...cachedPresenceSnapshot.directoryUsers],
-    peopleById: {
-      ...cachedPresenceSnapshot.peopleById,
-    },
-  };
-}
-
-function writeCachedPresenceSnapshot({ topic, viewerActorId, currentUser, directoryUsers }) {
-  const resolvedCurrentUser = currentUser || fallbackCurrentUser;
-  const resolvedDirectoryUsers = Array.isArray(directoryUsers) ? [...directoryUsers] : [];
-
-  cachedPresenceSnapshot = {
-    topic: topic || "",
-    viewerActorId: viewerActorId || "",
-    currentUser: resolvedCurrentUser,
-    directoryUsers: resolvedDirectoryUsers,
-    peopleById: createPeopleById([resolvedCurrentUser, ...resolvedDirectoryUsers]),
-  };
-
-  return readCachedPresenceSnapshot();
-}
-
-function flattenPresenceEntries(presenceState) {
-  if (!presenceState || typeof presenceState !== "object") {
-    return [];
-  }
-
-  const actors = [];
-
-  Object.entries(presenceState).forEach(([presenceKey, metas]) => {
-    if (!Array.isArray(metas)) {
-      return;
-    }
-
-    metas.forEach((meta) => {
-      if (!meta || typeof meta !== "object") {
-        return;
-      }
-
-      const actorId =
-        typeof meta.actorId === "string" && meta.actorId.trim()
-          ? meta.actorId.trim()
-          : typeof presenceKey === "string" && presenceKey.trim()
-            ? presenceKey.trim()
-            : "";
-
-      if (!actorId) {
-        return;
-      }
-
-      actors.push({
-        actorId,
-        actorType: meta.actorType === "user" ? "user" : "guest",
-        name:
-          typeof meta.name === "string" && meta.name.trim()
-            ? meta.name.trim()
-            : "",
-        userId:
-          typeof meta.userId === "number" && Number.isInteger(meta.userId)
-            ? meta.userId
-            : null,
-        guestId:
-          typeof meta.guestId === "string" && meta.guestId.trim()
-            ? meta.guestId.trim()
-            : null,
-      });
-    });
-  });
-
-  return actors;
-}
-
-function resolveUserIdFromPresenceActor(actor) {
-  if (typeof actor?.userId === "number" && Number.isInteger(actor.userId)) {
-    return actor.userId;
-  }
-
-  if (typeof actor?.actorId !== "string") {
-    return null;
-  }
-
-  const match = PRESENCE_USER_ID_PATTERN.exec(actor.actorId);
-  if (!match) {
-    return null;
-  }
-
-  return Number(match[1]);
-}
-
-function resolveGuestIdFromPresenceActor(actor) {
-  if (typeof actor?.guestId === "string" && actor.guestId.trim()) {
-    return actor.guestId.trim();
-  }
-
-  if (typeof actor?.actorId !== "string") {
-    return "";
-  }
-
-  const match = PRESENCE_GUEST_ID_PATTERN.exec(actor.actorId);
-  return match ? match[1].trim() : "";
-}
-
 export function ShareBoardShell() {
-  const initialPresenceSnapshot = readCachedPresenceSnapshot();
+  const {
+    currentUser: presenceCurrentUser,
+    onlineUsers: directoryUsers,
+    peopleById,
+  } = usePresenceState();
+  const currentUser = presenceCurrentUser || fallbackCurrentUser;
+
   const [shares, setShares] = useState(initialShares);
-  const [currentUser, setCurrentUser] = useState(initialPresenceSnapshot.currentUser);
-  const [directoryUsers, setDirectoryUsers] = useState(initialPresenceSnapshot.directoryUsers);
-  const [peopleById, setPeopleById] = useState(() =>
-    initialPresenceSnapshot.peopleById
-  );
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -302,278 +67,22 @@ export function ShareBoardShell() {
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
 
-  useEffect(() => {
-    let active = true;
-    let unsubscribePresence = async () => {};
-
-    const getGuestLabel = (guestId) => {
-      return getDeterministicGuestLabel(guestId);
-    };
-
-    const loadLiveUsers = async () => {
-      const accessToken = getStoredAccessToken();
-      let resolvedAuthUser = null;
-
-      try {
-        const requestAccessToken = accessToken || undefined;
-        const shouldLoadMe = Boolean(accessToken);
-        const presenceBootstrapPromise = getPresenceBootstrap({
-          accessToken: requestAccessToken,
-        });
-
-        if (shouldLoadMe) {
-          try {
-            const meResult = await getUsersMe({ accessToken: requestAccessToken });
-            if (!active) {
-              return;
-            }
-
-            if (meResult?.user) {
-              resolvedAuthUser = toBoardUser(meResult.user, fallbackCurrentUser);
-              setCurrentUser(resolvedAuthUser);
-              setDirectoryUsers([]);
-              setPeopleById(createPeopleById([resolvedAuthUser]));
-            }
-          } catch {
-            resolvedAuthUser = null;
-          }
-        }
-
-        const presenceBootstrap = await presenceBootstrapPromise;
-        if (!active) {
-          return;
-        }
-        const presenceViewer = presenceBootstrap?.viewer || null;
-        const presenceTopic = presenceBootstrap?.topic || "";
-
-        const meUser = resolvedAuthUser;
-        const guestSelfId =
-          typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
-            ? presenceViewer.actorId.trim()
-            : `g:self-${Date.now()}`;
-        const guestSelfLabel =
-          presenceViewer?.actorType === "guest"
-            ? getGuestLabel(resolveGuestIdFromPresenceActor({ actorId: guestSelfId }))
-            : fallbackCurrentUser.name;
-        const guestSelfUser = toBoardUser(
-          { id: guestSelfId, name: guestSelfLabel },
-          {
-            ...fallbackCurrentUser,
-            id: guestSelfId,
-            role: "Guest",
-            presence: "Online now",
-          },
-        );
-        const resolvedCurrentUser = meUser || guestSelfUser;
-        const viewerActorId =
-          typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
-            ? presenceViewer.actorId.trim()
-            : typeof resolvedCurrentUser.id === "number"
-              ? `u:${resolvedCurrentUser.id}`
-              : String(resolvedCurrentUser.id);
-        const cachedSnapshotBeforeSync = readCachedPresenceSnapshot();
-        const canReuseCachedUsers =
-          cachedSnapshotBeforeSync.topic === presenceTopic &&
-          cachedSnapshotBeforeSync.viewerActorId === viewerActorId;
-        const initialOnlineUsers = canReuseCachedUsers
-          ? cachedSnapshotBeforeSync.directoryUsers
-          : [];
-
-        setCurrentUser(resolvedCurrentUser);
-        setDirectoryUsers(initialOnlineUsers);
-        setPeopleById(createPeopleById([resolvedCurrentUser, ...initialOnlineUsers]));
-        writeCachedPresenceSnapshot({
-          topic: presenceTopic,
-          viewerActorId,
-          currentUser: resolvedCurrentUser,
-          directoryUsers: initialOnlineUsers,
-        });
-
-        if (!presenceTopic || !isRealtimePresenceConfigured()) {
-          setSelectedUserIds((currentSelection) => {
-            const allowedIdKeys = new Set(initialOnlineUsers.map((user) => getIdKey(user.id)));
-            return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
-          });
-          return;
-        }
-
-        const guestIdFromBootstrap =
-          typeof presenceBootstrap?.presence?.guestId === "string" &&
-          presenceBootstrap.presence.guestId.trim()
-            ? presenceBootstrap.presence.guestId.trim()
-            : resolveGuestIdFromPresenceActor({ actorId: viewerActorId });
-        const presenceKeyBase =
-          typeof presenceBootstrap?.presence?.presenceKeyBase === "string" &&
-          presenceBootstrap.presence.presenceKeyBase.trim()
-            ? presenceBootstrap.presence.presenceKeyBase.trim()
-            : viewerActorId;
-
-        const presencePayload = {
-          actorType: presenceViewer?.actorType === "user" ? "user" : "guest",
-          actorId: viewerActorId,
-          userId: typeof resolvedCurrentUser.id === "number" ? resolvedCurrentUser.id : null,
-          guestId: guestIdFromBootstrap || null,
-          name: resolvedCurrentUser.name,
-          verified: Boolean(presenceViewer?.user?.emailVerifiedAt),
-          onlineAt: new Date().toISOString(),
-        };
-
-        unsubscribePresence = subscribeToPresenceChannel({
-          topic: presenceTopic,
-          presenceKey: createPresenceSessionKey(presenceKeyBase),
-          payload: presencePayload,
-          onPresenceSync: (presenceState) => {
-            if (!active) {
-              return;
-            }
-
-            const actors = flattenPresenceEntries(presenceState);
-            const uniqueActors = new Map();
-            actors.forEach((actor) => {
-              if (!uniqueActors.has(actor.actorId)) {
-                uniqueActors.set(actor.actorId, actor);
-              }
-            });
-
-            const onlineUsers = [];
-
-            uniqueActors.forEach((actor) => {
-              if (actor.actorId === viewerActorId) {
-                return;
-              }
-
-              if (actor.actorType === "user") {
-                const userId = resolveUserIdFromPresenceActor(actor);
-                const actorName =
-                  typeof actor.name === "string" && actor.name.trim()
-                    ? actor.name.trim()
-                    : "Team member";
-                const actorUserId = Number.isInteger(userId) ? userId : actor.actorId;
-
-                onlineUsers.push(
-                  toBoardUser(
-                    {
-                      id: actorUserId,
-                      name: actorName,
-                    },
-                    {
-                      id: actorUserId,
-                      name: actorName,
-                      role: "Team member",
-                      presence: "Online now",
-                    },
-                  ),
-                );
-                return;
-              }
-
-              const guestId = resolveGuestIdFromPresenceActor(actor);
-              if (!guestId) {
-                return;
-              }
-
-              const label = getGuestLabel(guestId);
-              const guestActorId = actor.actorId || `g:${guestId}`;
-
-              onlineUsers.push(
-                toBoardUser(
-                  {
-                    id: guestActorId,
-                    name: label,
-                  },
-                  {
-                    id: guestActorId,
-                    name: label,
-                    role: "Guest",
-                    presence: "Online now",
-                  },
-                ),
-              );
-            });
-
-            onlineUsers.sort((left, right) => {
-              const byName = left.name.localeCompare(right.name);
-              if (byName !== 0) return byName;
-
-              return getIdKey(left.id).localeCompare(getIdKey(right.id));
-            });
-
-            setDirectoryUsers(onlineUsers);
-            setPeopleById(
-              createPeopleById([resolvedCurrentUser, ...onlineUsers]),
-            );
-            writeCachedPresenceSnapshot({
-              topic: presenceTopic,
-              viewerActorId,
-              currentUser: resolvedCurrentUser,
-              directoryUsers: onlineUsers,
-            });
-            setSelectedUserIds((currentSelection) => {
-              const allowedIdKeys = new Set(onlineUsers.map((user) => getIdKey(user.id)));
-              return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
-            });
-          },
-        });
-
-      } catch (_error) {
-        if (!active) {
-          return;
-        }
-
-        const cachedSnapshot = readCachedPresenceSnapshot();
-
-        if (resolvedAuthUser) {
-          const reuseCachedUsersForAuthUser =
-            getIdKey(cachedSnapshot.currentUser?.id) === getIdKey(resolvedAuthUser.id);
-          const cachedUsers = reuseCachedUsersForAuthUser ? cachedSnapshot.directoryUsers : [];
-
-          setCurrentUser(resolvedAuthUser);
-          setDirectoryUsers(cachedUsers);
-          setPeopleById(createPeopleById([resolvedAuthUser, ...cachedUsers]));
-          writeCachedPresenceSnapshot({
-            topic: reuseCachedUsersForAuthUser ? cachedSnapshot.topic : "",
-            viewerActorId: reuseCachedUsersForAuthUser ? cachedSnapshot.viewerActorId : "",
-            currentUser: resolvedAuthUser,
-            directoryUsers: cachedUsers,
-          });
-          setSelectedUserIds((currentSelection) => {
-            const allowedIdKeys = new Set(cachedUsers.map((user) => getIdKey(user.id)));
-            return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
-          });
-          return;
-        }
-
-        setCurrentUser(fallbackCurrentUser);
-        setDirectoryUsers(cachedSnapshot.directoryUsers);
-        setPeopleById(
-          createPeopleById([fallbackCurrentUser, ...cachedSnapshot.directoryUsers]),
-        );
-        writeCachedPresenceSnapshot({
-          topic: cachedSnapshot.topic,
-          viewerActorId: cachedSnapshot.viewerActorId,
-          currentUser: fallbackCurrentUser,
-          directoryUsers: cachedSnapshot.directoryUsers,
-        });
-        setSelectedUserIds((currentSelection) => {
-          const allowedIdKeys = new Set(
-            cachedSnapshot.directoryUsers.map((user) => getIdKey(user.id)),
-          );
-          return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
-        });
-      }
-    };
-
-    loadLiveUsers();
-
-    return () => {
-      active = false;
-      void unsubscribePresence();
-    };
-  }, []);
+  const allowedIdKeys = useMemo(
+    () => new Set(directoryUsers.map((user) => getIdKey(user.id))),
+    [directoryUsers],
+  );
+  const effectiveSelectedUserIds = useMemo(
+    () => selectedUserIds.filter((id) => allowedIdKeys.has(getIdKey(id))),
+    [selectedUserIds, allowedIdKeys],
+  );
+  const selectedIdKeys = useMemo(
+    () => new Set(effectiveSelectedUserIds.map((id) => getIdKey(id))),
+    [effectiveSelectedUserIds],
+  );
 
   const selectedUsers = useMemo(
-    () => directoryUsers.filter((user) => selectedUserIds.includes(user.id)),
-    [directoryUsers, selectedUserIds]
+    () => directoryUsers.filter((user) => selectedIdKeys.has(getIdKey(user.id))),
+    [directoryUsers, selectedIdKeys],
   );
 
   const visibleShares = shares
@@ -581,11 +90,16 @@ export function ShareBoardShell() {
     .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
 
   const toggleUser = (userId) => {
-    setSelectedUserIds((currentSelection) =>
-      currentSelection.includes(userId)
-        ? currentSelection.filter((id) => id !== userId)
-        : [...currentSelection, userId],
-    );
+    const userIdKey = getIdKey(userId);
+
+    setSelectedUserIds((currentSelection) => {
+      const hasUser = currentSelection.some((id) => getIdKey(id) === userIdKey);
+      if (hasUser) {
+        return currentSelection.filter((id) => getIdKey(id) !== userIdKey);
+      }
+
+      return [...currentSelection, userId];
+    });
   };
 
   const handleFilesAdded = (acceptedFiles) => {
@@ -617,10 +131,12 @@ export function ShareBoardShell() {
     await wait(220);
 
     const createdAt = new Date().toISOString();
-    const audienceIds = [...selectedUserIds];
+    const audienceIds = [...effectiveSelectedUserIds];
+    const selectedAudienceKeys = new Set(audienceIds.map((id) => getIdKey(id)));
     const destinationNames = directoryUsers
-      .filter((user) => audienceIds.includes(user.id))
+      .filter((user) => selectedAudienceKeys.has(getIdKey(user.id)))
       .map((user) => user.name);
+
     const newShare = {
       id: allocateShareId(),
       senderId: currentUser.id,
@@ -647,9 +163,7 @@ export function ShareBoardShell() {
         ? "everyone on the board"
         : destinationNames.join(", ");
 
-    toast.success(
-      `Shared with ${destinationLabel}`,
-    );
+    toast.success(`Shared with ${destinationLabel}`);
   };
 
   const handleOpenAudience = () => {
@@ -688,12 +202,13 @@ export function ShareBoardShell() {
                 onClearFiles={handleClearFiles}
                 onSubmit={handleShare}
                 selectedUsers={selectedUsers}
-                selectedUserIds={selectedUserIds}
-                onRemoveAudienceUser={(userId) =>
+                selectedUserIds={effectiveSelectedUserIds}
+                onRemoveAudienceUser={(userId) => {
+                  const targetIdKey = getIdKey(userId);
                   setSelectedUserIds((currentSelection) =>
-                    currentSelection.filter((id) => id !== userId),
-                  )
-                }
+                    currentSelection.filter((id) => getIdKey(id) !== targetIdKey),
+                  );
+                }}
                 onClearAudience={() => setSelectedUserIds([])}
                 peopleById={peopleById}
                 isSharing={isSharing}
@@ -711,7 +226,7 @@ export function ShareBoardShell() {
             <UsersSidebar
               currentUser={currentUser}
               users={directoryUsers}
-              selectedUserIds={selectedUserIds}
+              selectedUserIds={effectiveSelectedUserIds}
               onToggleUser={toggleUser}
             />
           </aside>

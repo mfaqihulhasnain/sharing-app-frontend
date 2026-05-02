@@ -1,6 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const ACCESS_TOKEN_KEY = "sharing-board.access-token";
 const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 45;
+const AUTH_TOKEN_CHANGED_EVENT_NAME = "sharing-board:auth-token-changed";
 
 let refreshInFlightPromise = null;
 
@@ -96,6 +97,18 @@ async function refreshAccessToken() {
   });
 
   return refreshInFlightPromise;
+}
+
+function emitAuthTokenChanged(token) {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(
+    new CustomEvent(AUTH_TOKEN_CHANGED_EVENT_NAME, {
+      detail: {
+        hasToken: Boolean(token),
+      },
+    }),
+  );
 }
 
 function decodeJwtPayload(token) {
@@ -310,11 +323,13 @@ export function persistAccessToken(token, { remember = true } = {}) {
   if (remember) {
     window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
     window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    emitAuthTokenChanged(token);
     return;
   }
 
   window.sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  emitAuthTokenChanged(token);
 }
 
 export function getStoredAccessToken() {
@@ -330,6 +345,22 @@ export function clearStoredAccessToken() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  emitAuthTokenChanged("");
+}
+
+export function subscribeToAuthTokenChanges(listener) {
+  if (typeof window === "undefined" || typeof listener !== "function") {
+    return () => {};
+  }
+
+  const handler = (event) => {
+    listener(event?.detail || { hasToken: Boolean(getStoredAccessToken()) });
+  };
+
+  window.addEventListener(AUTH_TOKEN_CHANGED_EVENT_NAME, handler);
+  return () => {
+    window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT_NAME, handler);
+  };
 }
 
 export function getAuthErrorMessage(error) {
