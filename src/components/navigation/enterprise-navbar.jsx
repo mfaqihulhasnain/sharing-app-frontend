@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Grid2x2Check, Loader2, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, Grid2x2Check, Loader2, LogOut, Menu, UserCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   clearStoredAccessToken,
@@ -257,6 +257,15 @@ export function EnterpriseNavbar() {
                     className="absolute right-0 top-[calc(100%+0.45rem)] z-50 w-40 rounded-xl border border-line bg-card p-1.5 shadow-board"
                     role="menu"
                   >
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground transition hover:bg-card-muted"
+                      role="menuitem"
+                    >
+                      <UserCircle2 className="h-4 w-4" />
+                      Profile
+                    </Link>
                     <button
                       type="button"
                       onClick={handleLogout}

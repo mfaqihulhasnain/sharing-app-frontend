@@ -29,15 +29,16 @@ async function parseResponse(response) {
 }
 
 async function request(path, options = {}) {
+  const { headers: optionHeaders, method: optionMethod, ...restOptions } = options;
   const response = await fetch(getRequestUrl(path), {
-    method: options.method || "GET",
+    ...restOptions,
+    method: optionMethod || "GET",
     headers: {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(optionHeaders || {}),
     },
     credentials: "include",
     cache: "no-store",
-    ...options,
   });
 
   const payload = await parseResponse(response);
@@ -202,6 +203,16 @@ export async function bootstrapSessionFromRefresh() {
 export async function getUsersMe({ accessToken }) {
   return requestWithAccessTokenRetry("/users/me", {
     accessToken,
+  });
+}
+
+export async function updateUsersMe({ accessToken, name }) {
+  return requestWithAccessTokenRetry("/users/me", {
+    accessToken,
+    method: "PATCH",
+    body: JSON.stringify({
+      name,
+    }),
   });
 }
 
