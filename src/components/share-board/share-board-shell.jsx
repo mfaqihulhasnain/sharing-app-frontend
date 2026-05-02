@@ -121,6 +121,21 @@ function normalizeSharePayload(payload) {
   return payload;
 }
 
+function canActorSeeShare(share, actorId) {
+  const normalizedActorId = getIdKey(actorId);
+  if (!normalizedActorId) return false;
+
+  if (getIdKey(share.senderId) === normalizedActorId) {
+    return true;
+  }
+
+  if (!Array.isArray(share.audienceIds) || share.audienceIds.length === 0) {
+    return true;
+  }
+
+  return share.audienceIds.some((id) => getIdKey(id) === normalizedActorId);
+}
+
 function sortShares(shares) {
   return [...shares].sort((left, right) => {
     const byDate = new Date(right.createdAt) - new Date(left.createdAt);
@@ -259,12 +274,15 @@ export function ShareBoardShell() {
       if (!boardShare) {
         return;
       }
+      if (!canActorSeeShare(boardShare, viewerShareActorId)) {
+        return;
+      }
 
       setShares((currentShares) => mergeShares(currentShares, [boardShare]));
     });
 
     return unsubscribe;
-  }, [topic]);
+  }, [topic, viewerShareActorId]);
 
   const toggleUser = (userId) => {
     const userIdKey = getIdKey(userId);
