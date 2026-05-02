@@ -291,8 +291,10 @@ export function ShareBoardShell() {
     topic,
   } = usePresenceState();
   const currentUser = presenceCurrentUser || fallbackCurrentUser;
+  const initialShares = readShareSnapshot(viewerActorId);
 
-  const [shares, setShares] = useState(() => readShareSnapshot(viewerActorId));
+  const [shares, setShares] = useState(() => initialShares);
+  const [isSharesLoading, setIsSharesLoading] = useState(() => initialShares.length === 0);
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -336,7 +338,9 @@ export function ShareBoardShell() {
   }, [peopleById, shares]);
 
   useEffect(() => {
-    setShares(readShareSnapshot(viewerActorId));
+    const snapshot = readShareSnapshot(viewerActorId);
+    setShares(snapshot);
+    setIsSharesLoading(snapshot.length === 0);
   }, [viewerActorId]);
 
   useEffect(() => {
@@ -345,6 +349,10 @@ export function ShareBoardShell() {
 
   useEffect(() => {
     let active = true;
+    const hasSnapshot = readShareSnapshot(viewerActorId).length > 0;
+    if (!hasSnapshot) {
+      setIsSharesLoading(true);
+    }
 
     const loadShares = async () => {
       try {
@@ -361,6 +369,9 @@ export function ShareBoardShell() {
         setShares(sortShares(loadedShares));
       } catch {
         if (!active) return;
+      } finally {
+        if (!active) return;
+        setIsSharesLoading(false);
       }
     };
 
@@ -695,6 +706,7 @@ export function ShareBoardShell() {
             </div>
             <SharedBoard
               items={shares}
+              isLoading={isSharesLoading}
               peopleById={boardPeopleById}
               viewerActorId={viewerShareActorId}
               onDeleteShare={handleDeleteShare}

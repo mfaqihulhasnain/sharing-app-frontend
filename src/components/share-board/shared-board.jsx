@@ -2,8 +2,31 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "@/components/share-board/empty-state";
 import { ShareItemCard } from "@/components/share-board/share-item-card";
 
+function SharedBoardSkeleton() {
+  return (
+    <div className="space-y-2.5">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={`share-skeleton-${index + 1}`}
+          className="animate-pulse rounded-2xl border border-line/80 bg-card px-4 py-3.5 sm:px-5"
+        >
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 shrink-0 rounded-xl bg-card-muted" />
+            <div className="min-w-0 flex-1 space-y-2.5">
+              <div className="h-3 w-32 rounded bg-card-muted" />
+              <div className="h-3 w-full rounded bg-card-muted" />
+              <div className="h-3 w-5/6 rounded bg-card-muted" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SharedBoard({
   items,
+  isLoading = false,
   peopleById,
   viewerActorId,
   onDeleteShare,
@@ -23,7 +46,9 @@ export function SharedBoard({
         )}
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && isLoading ? (
+        <SharedBoardSkeleton />
+      ) : items.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="space-y-2.5">
