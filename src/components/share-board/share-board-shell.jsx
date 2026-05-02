@@ -172,6 +172,41 @@ function getIdKey(id) {
   return "";
 }
 
+let cachedPresenceSnapshot = {
+  topic: "",
+  viewerActorId: "",
+  currentUser: fallbackCurrentUser,
+  directoryUsers: [],
+  peopleById: createPeopleById([fallbackCurrentUser]),
+};
+
+function readCachedPresenceSnapshot() {
+  return {
+    topic: cachedPresenceSnapshot.topic,
+    viewerActorId: cachedPresenceSnapshot.viewerActorId,
+    currentUser: cachedPresenceSnapshot.currentUser,
+    directoryUsers: [...cachedPresenceSnapshot.directoryUsers],
+    peopleById: {
+      ...cachedPresenceSnapshot.peopleById,
+    },
+  };
+}
+
+function writeCachedPresenceSnapshot({ topic, viewerActorId, currentUser, directoryUsers }) {
+  const resolvedCurrentUser = currentUser || fallbackCurrentUser;
+  const resolvedDirectoryUsers = Array.isArray(directoryUsers) ? [...directoryUsers] : [];
+
+  cachedPresenceSnapshot = {
+    topic: topic || "",
+    viewerActorId: viewerActorId || "",
+    currentUser: resolvedCurrentUser,
+    directoryUsers: resolvedDirectoryUsers,
+    peopleById: createPeopleById([resolvedCurrentUser, ...resolvedDirectoryUsers]),
+  };
+
+  return readCachedPresenceSnapshot();
+}
+
 function flattenPresenceEntries(presenceState) {
   if (!presenceState || typeof presenceState !== "object") {
     return [];
@@ -253,11 +288,12 @@ function resolveGuestIdFromPresenceActor(actor) {
 }
 
 export function ShareBoardShell() {
+  const initialPresenceSnapshot = readCachedPresenceSnapshot();
   const [shares, setShares] = useState(initialShares);
-  const [currentUser, setCurrentUser] = useState(fallbackCurrentUser);
-  const [directoryUsers, setDirectoryUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(initialPresenceSnapshot.currentUser);
+  const [directoryUsers, setDirectoryUsers] = useState(initialPresenceSnapshot.directoryUsers);
   const [peopleById, setPeopleById] = useState(() =>
-    createPeopleById([fallbackCurrentUser])
+    initialPresenceSnapshot.peopleById
   );
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -329,22 +365,38 @@ export function ShareBoardShell() {
           },
         );
         const resolvedCurrentUser = meUser || guestSelfUser;
-
-        setCurrentUser(resolvedCurrentUser);
-        setDirectoryUsers([]);
-        setPeopleById(createPeopleById([resolvedCurrentUser]));
-
-        if (!presenceTopic || !isRealtimePresenceConfigured()) {
-          setSelectedUserIds([]);
-          return;
-        }
-
         const viewerActorId =
           typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
             ? presenceViewer.actorId.trim()
             : typeof resolvedCurrentUser.id === "number"
               ? `u:${resolvedCurrentUser.id}`
               : String(resolvedCurrentUser.id);
+        const cachedSnapshotBeforeSync = readCachedPresenceSnapshot();
+        const canReuseCachedUsers =
+          cachedSnapshotBeforeSync.topic === presenceTopic &&
+          cachedSnapshotBeforeSync.viewerActorId === viewerActorId;
+        const initialOnlineUsers = canReuseCachedUsers
+          ? cachedSnapshotBeforeSync.directoryUsers
+          : [];
+
+        setCurrentUser(resolvedCurrentUser);
+        setDirectoryUsers(initialOnlineUsers);
+        setPeopleById(createPeopleById([resolvedCurrentUser, ...initialOnlineUsers]));
+        writeCachedPresenceSnapshot({
+          topic: presenceTopic,
+          viewerActorId,
+          currentUser: resolvedCurrentUser,
+          directoryUsers: initialOnlineUsers,
+        });
+
+        if (!presenceTopic || !isRealtimePresenceConfigured()) {
+          setSelectedUserIds((currentSelection) => {
+            const allowedIdKeys = new Set(initialOnlineUsers.map((user) => getIdKey(user.id)));
+            return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
+          });
+          return;
+        }
+
         const guestIdFromBootstrap =
           typeof presenceBootstrap?.presence?.guestId === "string" &&
           presenceBootstrap.presence.guestId.trim()
@@ -450,6 +502,12 @@ export function ShareBoardShell() {
             setPeopleById(
               createPeopleById([resolvedCurrentUser, ...onlineUsers]),
             );
+            writeCachedPresenceSnapshot({
+              topic: presenceTopic,
+              viewerActorId,
+              currentUser: resolvedCurrentUser,
+              directoryUsers: onlineUsers,
+            });
             setSelectedUserIds((currentSelection) => {
               const allowedIdKeys = new Set(onlineUsers.map((user) => getIdKey(user.id)));
               return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
@@ -462,17 +520,46 @@ export function ShareBoardShell() {
           return;
         }
 
+        const cachedSnapshot = readCachedPresenceSnapshot();
+
         if (resolvedAuthUser) {
+          const reuseCachedUsersForAuthUser =
+            getIdKey(cachedSnapshot.currentUser?.id) === getIdKey(resolvedAuthUser.id);
+          const cachedUsers = reuseCachedUsersForAuthUser ? cachedSnapshot.directoryUsers : [];
+
           setCurrentUser(resolvedAuthUser);
-          setDirectoryUsers([]);
-          setPeopleById(createPeopleById([resolvedAuthUser]));
-          setSelectedUserIds([]);
+          setDirectoryUsers(cachedUsers);
+          setPeopleById(createPeopleById([resolvedAuthUser, ...cachedUsers]));
+          writeCachedPresenceSnapshot({
+            topic: reuseCachedUsersForAuthUser ? cachedSnapshot.topic : "",
+            viewerActorId: reuseCachedUsersForAuthUser ? cachedSnapshot.viewerActorId : "",
+            currentUser: resolvedAuthUser,
+            directoryUsers: cachedUsers,
+          });
+          setSelectedUserIds((currentSelection) => {
+            const allowedIdKeys = new Set(cachedUsers.map((user) => getIdKey(user.id)));
+            return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
+          });
           return;
         }
 
         setCurrentUser(fallbackCurrentUser);
-        setDirectoryUsers([]);
-        setPeopleById(createPeopleById([fallbackCurrentUser]));
+        setDirectoryUsers(cachedSnapshot.directoryUsers);
+        setPeopleById(
+          createPeopleById([fallbackCurrentUser, ...cachedSnapshot.directoryUsers]),
+        );
+        writeCachedPresenceSnapshot({
+          topic: cachedSnapshot.topic,
+          viewerActorId: cachedSnapshot.viewerActorId,
+          currentUser: fallbackCurrentUser,
+          directoryUsers: cachedSnapshot.directoryUsers,
+        });
+        setSelectedUserIds((currentSelection) => {
+          const allowedIdKeys = new Set(
+            cachedSnapshot.directoryUsers.map((user) => getIdKey(user.id)),
+          );
+          return currentSelection.filter((id) => allowedIdKeys.has(getIdKey(id)));
+        });
       }
     };
 
