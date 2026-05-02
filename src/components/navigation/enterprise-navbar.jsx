@@ -46,10 +46,7 @@ export function EnterpriseNavbar() {
   const router = useRouter();
   const initialUserState = readCurrentUserState();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(() => {
-    const hasToken = Boolean(getStoredAccessToken());
-    return initialUserState.isLoading || (!initialUserState.hasResolved && hasToken);
-  });
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentUser, setCurrentUser] = useState(initialUserState.user);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);

@@ -44,10 +44,9 @@ function formatDate(value) {
 export function ProfilePageClient() {
   const router = useRouter();
   const initialUserState = readCurrentUserState();
-  const [isLoading, setIsLoading] = useState(() => {
-    const hasToken = Boolean(getStoredAccessToken());
-    return initialUserState.isLoading || (!initialUserState.hasResolved && hasToken);
-  });
+  const [isLoading, setIsLoading] = useState(
+    () => initialUserState.isLoading || !initialUserState.hasResolved,
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [currentUser, setCurrentUser] = useState(initialUserState.user);
   const [name, setName] = useState("");
