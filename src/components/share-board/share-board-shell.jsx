@@ -276,31 +276,41 @@ export function ShareBoardShell() {
 
     const loadLiveUsers = async () => {
       const accessToken = getStoredAccessToken();
+      let resolvedAuthUser = null;
 
       try {
         const requestAccessToken = accessToken || undefined;
         const shouldLoadMe = Boolean(accessToken);
-        const requests = shouldLoadMe
-          ? [
-              getUsersMe({ accessToken: requestAccessToken }),
-              getPresenceBootstrap({ accessToken: requestAccessToken }),
-            ]
-          : [getPresenceBootstrap({})];
+        const presenceBootstrapPromise = getPresenceBootstrap({
+          accessToken: requestAccessToken,
+        });
 
-        const responses = await Promise.all(requests);
+        if (shouldLoadMe) {
+          try {
+            const meResult = await getUsersMe({ accessToken: requestAccessToken });
+            if (!active) {
+              return;
+            }
 
+            if (meResult?.user) {
+              resolvedAuthUser = toBoardUser(meResult.user, fallbackCurrentUser);
+              setCurrentUser(resolvedAuthUser);
+              setDirectoryUsers([]);
+              setPeopleById(createPeopleById([resolvedAuthUser]));
+            }
+          } catch {
+            resolvedAuthUser = null;
+          }
+        }
+
+        const presenceBootstrap = await presenceBootstrapPromise;
         if (!active) {
           return;
         }
-
-        const meResult = shouldLoadMe ? responses[0] : null;
-        const presenceBootstrap = shouldLoadMe ? responses[1] : responses[0];
         const presenceViewer = presenceBootstrap?.viewer || null;
         const presenceTopic = presenceBootstrap?.topic || "";
 
-        const meUser = meResult?.user
-          ? toBoardUser(meResult.user, fallbackCurrentUser)
-          : null;
+        const meUser = resolvedAuthUser;
         const guestSelfId =
           typeof presenceViewer?.actorId === "string" && presenceViewer.actorId.trim()
             ? presenceViewer.actorId.trim()
@@ -449,6 +459,14 @@ export function ShareBoardShell() {
 
       } catch (_error) {
         if (!active) {
+          return;
+        }
+
+        if (resolvedAuthUser) {
+          setCurrentUser(resolvedAuthUser);
+          setDirectoryUsers([]);
+          setPeopleById(createPeopleById([resolvedAuthUser]));
+          setSelectedUserIds([]);
           return;
         }
 

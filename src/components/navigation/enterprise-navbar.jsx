@@ -52,8 +52,10 @@ export function EnterpriseNavbar() {
     () =>
       isSignedIn
         ? BASE_NAV_ITEMS
-        : [...BASE_NAV_ITEMS, { label: "Login", href: "/login" }],
-    [isSignedIn],
+        : isCheckingAuth
+          ? BASE_NAV_ITEMS
+          : [...BASE_NAV_ITEMS, { label: "Login", href: "/login" }],
+    [isSignedIn, isCheckingAuth],
   );
 
   useEffect(() => {
