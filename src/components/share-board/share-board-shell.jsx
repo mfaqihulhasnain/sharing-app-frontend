@@ -7,10 +7,13 @@ import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
 import {
+  abortShareUploads,
   createShare,
   deleteShare,
   getShares,
   getStoredAccessToken,
+  initShareUploads,
+  uploadFileToSignedTarget,
 } from "@/lib/auth-client";
 import { currentUser as fallbackCurrentUser } from "@/lib/mock-data";
 import {
@@ -109,7 +112,33 @@ function toBoardShare(share) {
       ? [...new Set(share.audienceActorIds.map((id) => getIdKey(id)).filter(Boolean))]
       : [],
     text: typeof share.text === "string" ? share.text : "",
-    files: [],
+    files: Array.isArray(share.files)
+      ? share.files
+          .map((file) => {
+            if (!file || typeof file !== "object") {
+              return null;
+            }
+
+            const fileName =
+              typeof file.name === "string" && file.name.trim() ? file.name.trim() : "";
+            const fileMimeType =
+              typeof file.mimeType === "string" ? file.mimeType.trim() : "";
+            const fileSizeBytes = Number(file.sizeBytes);
+            if (!fileName || !Number.isFinite(fileSizeBytes) || fileSizeBytes <= 0) {
+              return null;
+            }
+
+            return {
+              id: file.id,
+              name: fileName,
+              mimeType: fileMimeType || "application/octet-stream",
+              size: fileSizeBytes,
+              sizeBytes: fileSizeBytes,
+              createdAt: file.createdAt,
+            };
+          })
+          .filter(Boolean)
+      : [],
     senderUser: share.senderUser || null,
   };
 }
@@ -171,6 +200,17 @@ function removeShareById(currentShares, shareId) {
   }
 
   return currentShares.filter((share) => getIdKey(share.id) !== targetKey);
+}
+
+function toOptimisticBoardFiles(attachments) {
+  return attachments.map((file) => ({
+    id: `temp-file:${file.id}`,
+    name: file.name,
+    mimeType: file.type || "application/octet-stream",
+    size: file.size,
+    sizeBytes: file.size,
+    sourceFile: file.sourceFile,
+  }));
 }
 
 function buildShareSenderPerson(share) {
@@ -348,10 +388,6 @@ export function ShareBoardShell() {
       toast.error("Add a note or at least one file before sharing.");
       return;
     }
-    if (attachments.length > 0) {
-      toast.error("File upload backend is not enabled yet.");
-      return;
-    }
     if (!viewerShareActorId) {
       toast.error("Unable to resolve your sharing identity.");
       return;
@@ -377,7 +413,7 @@ export function ShareBoardShell() {
       createdAt,
       audienceIds: audienceActorIds,
       text: trimmedText,
-      files: [],
+      files: toOptimisticBoardFiles(attachments),
       senderUser:
         typeof currentUser?.id === "number" && Number.isInteger(currentUser.id)
           ? {
@@ -389,13 +425,74 @@ export function ShareBoardShell() {
     };
 
     setShares((currentShares) => mergeShares(currentShares, [optimisticShare]));
+    const accessToken = getStoredAccessToken() || undefined;
+    let stagedUploadIds = [];
 
     try {
+      const preparedFiles = attachments.map((file) => ({
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        sizeBytes: file.size,
+      }));
+      let uploadIds = [];
+
+      if (preparedFiles.length > 0) {
+        const initializedUploads = await initShareUploads({
+          accessToken,
+          files: preparedFiles,
+        });
+        const uploads = Array.isArray(initializedUploads?.uploads)
+          ? initializedUploads.uploads
+          : [];
+        if (uploads.length !== preparedFiles.length) {
+          throw new Error("Upload initialization returned an invalid response.");
+        }
+
+        uploadIds = uploads
+          .map((upload) =>
+            typeof upload?.uploadId === "string" && upload.uploadId.trim()
+              ? upload.uploadId.trim()
+              : ""
+          )
+          .filter(Boolean);
+        stagedUploadIds = [...uploadIds];
+        if (uploadIds.length !== preparedFiles.length) {
+          throw new Error("Upload IDs were missing from upload initialization response.");
+        }
+
+        try {
+          await Promise.all(
+            uploads.map((upload, index) =>
+              uploadFileToSignedTarget({
+                bucket: upload.bucket,
+                path: upload.path,
+                token: upload.token,
+                file: attachments[index]?.sourceFile,
+                mimeType: preparedFiles[index].mimeType,
+              })
+            )
+          );
+        } catch (uploadError) {
+          try {
+            await abortShareUploads({
+              accessToken,
+              uploadIds,
+            });
+          } catch (_abortError) {
+            // Ignore cleanup errors and surface the original upload failure.
+          }
+
+          throw uploadError;
+        }
+      }
+
       const data = await createShare({
-        accessToken: getStoredAccessToken() || undefined,
-        text: trimmedText,
+        accessToken,
+        text: trimmedText || undefined,
         audienceActorIds,
+        uploadIds,
       });
+      stagedUploadIds = [];
       const createdShare = toBoardShare(data?.share);
 
       setShares((currentShares) => {
@@ -416,6 +513,17 @@ export function ShareBoardShell() {
           : destinationNames.join(", ");
       toast.success(`Shared with ${destinationLabel}`);
     } catch (error) {
+      if (stagedUploadIds.length) {
+        try {
+          await abortShareUploads({
+            accessToken,
+            uploadIds: stagedUploadIds,
+          });
+        } catch (_abortError) {
+          // Ignore cleanup errors and continue with local rollback + toast.
+        }
+      }
+
       setShares((currentShares) =>
         currentShares.filter((share) => getIdKey(share.id) !== optimisticShareId),
       );

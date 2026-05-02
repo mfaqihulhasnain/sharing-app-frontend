@@ -1,9 +1,17 @@
+import { createClient } from "@supabase/supabase-js";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const ACCESS_TOKEN_KEY = "sharing-board.access-token";
 const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 45;
 const AUTH_TOKEN_CHANGED_EVENT_NAME = "sharing-board:auth-token-changed";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const SUPABASE_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "";
 
 let refreshInFlightPromise = null;
+let supabaseBrowserClient = null;
 
 class AuthRequestError extends Error {
   constructor(message, statusCode, details, code) {
@@ -97,6 +105,24 @@ async function refreshAccessToken() {
   });
 
   return refreshInFlightPromise;
+}
+
+function getSupabaseBrowserClient() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return null;
+  }
+
+  if (!supabaseBrowserClient) {
+    supabaseBrowserClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+
+  return supabaseBrowserClient;
 }
 
 function emitAuthTokenChanged(token) {
@@ -337,14 +363,20 @@ export async function createShare({
   accessToken,
   text,
   audienceActorIds = [],
+  uploadIds = [],
 }) {
+  const body = {
+    audienceActorIds,
+    uploadIds,
+  };
+  if (typeof text === "string") {
+    body.text = text;
+  }
+
   return requestWithAccessTokenRetry("/shares", {
     accessToken,
     method: "POST",
-    body: JSON.stringify({
-      text,
-      audienceActorIds,
-    }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -356,6 +388,67 @@ export async function deleteShare({
     accessToken,
     method: "DELETE",
   });
+}
+
+export async function initShareUploads({
+  accessToken,
+  files,
+}) {
+  return requestWithAccessTokenRetry("/shares/uploads/init", {
+    accessToken,
+    method: "POST",
+    body: JSON.stringify({
+      files,
+    }),
+  });
+}
+
+export async function abortShareUploads({
+  accessToken,
+  uploadIds,
+}) {
+  return requestWithAccessTokenRetry("/shares/uploads/abort", {
+    accessToken,
+    method: "POST",
+    body: JSON.stringify({
+      uploadIds,
+    }),
+  });
+}
+
+export async function getShareFileDownloadUrl({
+  accessToken,
+  id,
+}) {
+  return requestWithAccessTokenRetry(`/shares/files/${id}/download-url`, {
+    accessToken,
+  });
+}
+
+export async function uploadFileToSignedTarget({
+  bucket,
+  path,
+  token,
+  file,
+  mimeType,
+}) {
+  const client = getSupabaseBrowserClient();
+  if (!client) {
+    throw new Error("Supabase upload is not configured");
+  }
+
+  const { error } = await client.storage.from(bucket).uploadToSignedUrl(path, token, file, {
+    contentType:
+      typeof mimeType === "string" && mimeType.trim()
+        ? mimeType.trim()
+        : file?.type || undefined,
+    upsert: false,
+  });
+  if (error) {
+    throw new Error(error.message || "Unable to upload file");
+  }
+
+  return true;
 }
 
 export function persistAccessToken(token, { remember = true } = {}) {

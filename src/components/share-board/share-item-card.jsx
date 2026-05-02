@@ -11,6 +11,10 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BoardItemCard } from "@/components/share-board/board-item-card";
+import {
+  getShareFileDownloadUrl,
+  getStoredAccessToken,
+} from "@/lib/auth-client";
 import { cn, formatFileSize, getFileExtension } from "@/lib/utils";
 
 function getFileIcon(mimeType = "") {
@@ -33,7 +37,7 @@ function getFileIcon(mimeType = "") {
   return "document";
 }
 
-function downloadSharedFile(file) {
+function downloadLocalFallbackFile(file) {
   const blob =
     file.sourceFile ||
     new Blob(
@@ -49,6 +53,29 @@ function downloadSharedFile(file) {
   anchor.download = file.name;
   anchor.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function requestAndDownloadSharedFile(file) {
+  const numericId = Number(file?.id);
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    downloadLocalFallbackFile(file);
+    return;
+  }
+
+  const data = await getShareFileDownloadUrl({
+    accessToken: getStoredAccessToken() || undefined,
+    id: numericId,
+  });
+  const signedUrl =
+    typeof data?.url === "string" && data.url.trim() ? data.url.trim() : "";
+  if (!signedUrl) {
+    throw new Error("Download URL was not received.");
+  }
+
+  const anchor = document.createElement("a");
+  anchor.href = signedUrl;
+  anchor.rel = "noopener noreferrer";
+  anchor.click();
 }
 
 export function ShareItemCard({
@@ -81,9 +108,13 @@ export function ShareItemCard({
     }
   };
 
-  const handleDownload = (file) => {
-    downloadSharedFile(file);
-    toast.success(`${file.name} download started`);
+  const handleDownload = async (file) => {
+    try {
+      await requestAndDownloadSharedFile(file);
+      toast.success(`${file.name} download started`);
+    } catch {
+      toast.error("Unable to download this file right now");
+    }
   };
 
   return (
@@ -179,7 +210,7 @@ export function ShareItemCard({
                     "shrink-0 rounded-md text-[10.5px] text-muted hover:bg-card hover:text-foreground",
                     isMixedPost ? "h-6 px-1.5" : "h-7 px-2",
                   )}
-                  onClick={() => handleDownload(file)}
+                  onClick={() => void handleDownload(file)}
                 >
                   <Download className={cn(isMixedPost ? "h-3 w-3" : "h-3.5 w-3.5")} />
                   Download
