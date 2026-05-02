@@ -6,7 +6,12 @@ import { EnterpriseNavbar } from "@/components/navigation/enterprise-navbar";
 import { ShareComposer } from "@/components/share-board/share-composer";
 import { SharedBoard } from "@/components/share-board/shared-board";
 import { UsersSidebar } from "@/components/share-board/users-sidebar";
-import { createShare, getShares, getStoredAccessToken } from "@/lib/auth-client";
+import {
+  createShare,
+  deleteShare,
+  getShares,
+  getStoredAccessToken,
+} from "@/lib/auth-client";
 import { currentUser as fallbackCurrentUser } from "@/lib/mock-data";
 import {
   subscribePresenceShareEvents,
@@ -159,6 +164,15 @@ function mergeShares(currentShares, incomingShares) {
   return sortShares(Array.from(map.values()));
 }
 
+function removeShareById(currentShares, shareId) {
+  const targetKey = getIdKey(shareId);
+  if (!targetKey) {
+    return currentShares;
+  }
+
+  return currentShares.filter((share) => getIdKey(share.id) !== targetKey);
+}
+
 function buildShareSenderPerson(share) {
   const senderId = getIdKey(share.senderId);
   const senderName =
@@ -261,11 +275,24 @@ export function ShareBoardShell() {
 
   useEffect(() => {
     const unsubscribe = subscribePresenceShareEvents((message) => {
-      if (!message || message.event !== "share_created") {
+      if (!message || !message.event) {
         return;
       }
 
       if (topic && message.topic && message.topic !== topic) {
+        return;
+      }
+
+      if (message.event === "share_deleted") {
+        const deletedShareId = message.payload?.id;
+        if (deletedShareId === undefined || deletedShareId === null) {
+          return;
+        }
+
+        setShares((currentShares) => removeShareById(currentShares, deletedShareId));
+        return;
+      }
+      if (message.event !== "share_created") {
         return;
       }
 
@@ -402,6 +429,48 @@ export function ShareBoardShell() {
     }
   };
 
+  const handleDeleteShare = async (shareId) => {
+    const shareKey = getIdKey(shareId);
+    if (!shareKey) {
+      return;
+    }
+
+    const isOptimisticShare = shareKey.startsWith("temp:");
+    let removedShare = null;
+
+    setShares((currentShares) => {
+      const targetShare = currentShares.find((share) => getIdKey(share.id) === shareKey);
+      if (!targetShare) {
+        return currentShares;
+      }
+
+      removedShare = targetShare;
+      return removeShareById(currentShares, shareKey);
+    });
+
+    if (isOptimisticShare) {
+      return;
+    }
+
+    try {
+      await deleteShare({
+        accessToken: getStoredAccessToken() || undefined,
+        id: shareId,
+      });
+      toast.success("Share deleted");
+    } catch (error) {
+      if (removedShare) {
+        setShares((currentShares) => mergeShares(currentShares, [removedShare]));
+      }
+
+      toast.error(
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Unable to delete share right now.",
+      );
+    }
+  };
+
   const handleOpenAudience = () => {
     sidebarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -455,6 +524,7 @@ export function ShareBoardShell() {
               items={shares}
               peopleById={boardPeopleById}
               viewerActorId={viewerShareActorId}
+              onDeleteShare={handleDeleteShare}
             />
           </div>
 

@@ -2,7 +2,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmptyState } from "@/components/share-board/empty-state";
 import { ShareItemCard } from "@/components/share-board/share-item-card";
 
-export function SharedBoard({ items, peopleById, viewerActorId }) {
+export function SharedBoard({
+  items,
+  peopleById,
+  viewerActorId,
+  onDeleteShare,
+}) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between px-1">
@@ -53,6 +58,7 @@ export function SharedBoard({ items, peopleById, viewerActorId }) {
                     person={person}
                     peopleById={peopleById}
                     viewerActorId={viewerActorId}
+                    onDeleteShare={onDeleteShare}
                   />
                 </motion.div>
               );

@@ -348,6 +348,16 @@ export async function createShare({
   });
 }
 
+export async function deleteShare({
+  accessToken,
+  id,
+}) {
+  return requestWithAccessTokenRetry(`/shares/${id}`, {
+    accessToken,
+    method: "DELETE",
+  });
+}
+
 export function persistAccessToken(token, { remember = true } = {}) {
   if (typeof window === "undefined") return;
   if (!token) return;

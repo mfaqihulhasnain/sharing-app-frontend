@@ -6,6 +6,7 @@ import {
   FileSpreadsheet,
   FileText,
   FileVideo,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,17 @@ function downloadSharedFile(file) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function ShareItemCard({ item, person, peopleById, viewerActorId }) {
+export function ShareItemCard({
+  item,
+  person,
+  peopleById,
+  viewerActorId,
+  onDeleteShare,
+}) {
+  const canDelete =
+    typeof viewerActorId === "string" &&
+    viewerActorId.trim().length > 0 &&
+    item?.senderId === viewerActorId;
   const text = item.text?.trim() || "";
   const files = item.files || [];
   const hasText = Boolean(text);
@@ -176,6 +187,21 @@ export function ShareItemCard({ item, person, peopleById, viewerActorId }) {
               </div>
             );
           })}
+        </section>
+      )}
+
+      {canDelete && (
+        <section className="flex justify-end pt-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 rounded-md px-1.5 text-[10.5px] text-muted hover:bg-card-muted hover:text-foreground"
+            onClick={() => onDeleteShare?.(item.id)}
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete
+          </Button>
         </section>
       )}
     </BoardItemCard>
