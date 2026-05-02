@@ -22,6 +22,8 @@ import {
 } from "@/lib/presence-store";
 
 let nextAttachmentId = 1;
+const SHARE_PAGE_LIMIT = 100;
+const shareSnapshotByActorId = new Map();
 
 function allocateAttachmentId() {
   const id = nextAttachmentId;
@@ -49,6 +51,54 @@ function getIdKey(id) {
   if (typeof id === "number" && Number.isFinite(id)) return String(id);
   if (typeof id === "string" && id.trim()) return id.trim();
   return "";
+}
+
+function createCacheableShareSnapshot(shares) {
+  return (Array.isArray(shares) ? shares : [])
+    .map((share) => {
+      if (!share || typeof share !== "object") {
+        return null;
+      }
+
+      const shareIdKey = getIdKey(share.id);
+      if (!shareIdKey || shareIdKey.startsWith("temp:")) {
+        return null;
+      }
+
+      return {
+        ...share,
+        files: Array.isArray(share.files)
+          ? share.files.map((file) => {
+              if (!file || typeof file !== "object") {
+                return file;
+              }
+
+              const { sourceFile, ...rest } = file;
+              return rest;
+            })
+          : [],
+      };
+    })
+    .filter(Boolean);
+}
+
+function readShareSnapshot(actorId) {
+  const actorKey = getIdKey(actorId);
+  if (!actorKey) {
+    return [];
+  }
+
+  const cachedShares = shareSnapshotByActorId.get(actorKey);
+  return Array.isArray(cachedShares) ? cachedShares : [];
+}
+
+function writeShareSnapshot(actorId, shares) {
+  const actorKey = getIdKey(actorId);
+  if (!actorKey) {
+    return;
+  }
+
+  shareSnapshotByActorId.set(actorKey, createCacheableShareSnapshot(shares));
 }
 
 const USER_ACCENT_GRADIENTS = [
@@ -242,7 +292,7 @@ export function ShareBoardShell() {
   } = usePresenceState();
   const currentUser = presenceCurrentUser || fallbackCurrentUser;
 
-  const [shares, setShares] = useState([]);
+  const [shares, setShares] = useState(() => readShareSnapshot(viewerActorId));
   const [draftText, setDraftText] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -286,13 +336,21 @@ export function ShareBoardShell() {
   }, [peopleById, shares]);
 
   useEffect(() => {
+    setShares(readShareSnapshot(viewerActorId));
+  }, [viewerActorId]);
+
+  useEffect(() => {
+    writeShareSnapshot(viewerActorId, shares);
+  }, [viewerActorId, shares]);
+
+  useEffect(() => {
     let active = true;
 
     const loadShares = async () => {
       try {
         const data = await getShares({
           accessToken: getStoredAccessToken() || undefined,
-          limit: 100,
+          limit: SHARE_PAGE_LIMIT,
         });
 
         if (!active) return;
@@ -303,7 +361,6 @@ export function ShareBoardShell() {
         setShares(sortShares(loadedShares));
       } catch {
         if (!active) return;
-        setShares([]);
       }
     };
 

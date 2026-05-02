@@ -10,6 +10,7 @@ export function AppToaster() {
       theme="light"
       closeButton
       toastOptions={{
+        duration: 2000,
         classNames: {
           toast: "!rounded-2xl !border !border-line !bg-card !text-foreground !shadow-xl",
           title: "!text-sm !font-semibold !text-foreground",
