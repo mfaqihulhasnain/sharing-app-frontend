@@ -249,6 +249,7 @@ export function ShareBoardShell() {
   const [isSharing, setIsSharing] = useState(false);
   const composerRef = useRef(null);
   const sidebarRef = useRef(null);
+  const shareRequestInFlightRef = useRef(false);
   const viewerShareActorId = getIdKey(viewerActorId);
 
   const allowedIdKeys = useMemo(
@@ -382,6 +383,10 @@ export function ShareBoardShell() {
   };
 
   const handleShare = async () => {
+    if (shareRequestInFlightRef.current) {
+      return;
+    }
+
     const trimmedText = draftText.trim();
 
     if (!trimmedText && attachments.length === 0) {
@@ -393,6 +398,7 @@ export function ShareBoardShell() {
       return;
     }
 
+    shareRequestInFlightRef.current = true;
     setIsSharing(true);
     await wait(220);
 
@@ -405,6 +411,10 @@ export function ShareBoardShell() {
     const destinationNames = directoryUsers
       .filter((user) => selectedAudienceKeys.has(getIdKey(user.id)))
       .map((user) => user.name);
+    const destinationLabel =
+      audienceIds.length === 0
+        ? "everyone on the board"
+        : destinationNames.join(", ");
     const optimisticShareId = `temp:${Date.now()}`;
 
     const optimisticShare = {
@@ -425,6 +435,8 @@ export function ShareBoardShell() {
     };
 
     setShares((currentShares) => mergeShares(currentShares, [optimisticShare]));
+    const optimisticSuccessToastId = toast.success(`Shared with ${destinationLabel}`);
+    setIsSharing(false);
     const accessToken = getStoredAccessToken() || undefined;
     let stagedUploadIds = [];
 
@@ -506,13 +518,8 @@ export function ShareBoardShell() {
       setDraftText("");
       setAttachments([]);
       setSelectedUserIds([]);
-
-      const destinationLabel =
-        audienceIds.length === 0
-          ? "everyone on the board"
-          : destinationNames.join(", ");
-      toast.success(`Shared with ${destinationLabel}`);
     } catch (error) {
+      toast.dismiss(optimisticSuccessToastId);
       if (stagedUploadIds.length) {
         try {
           await abortShareUploads({
@@ -533,7 +540,7 @@ export function ShareBoardShell() {
           : "Unable to share right now.",
       );
     } finally {
-      setIsSharing(false);
+      shareRequestInFlightRef.current = false;
     }
   };
 
