@@ -1,5 +1,8 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const ACCESS_TOKEN_KEY = "sharing-board.access-token";
+const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 45;
+
+let refreshInFlightPromise = null;
 
 class AuthRequestError extends Error {
   constructor(message, statusCode, details, code) {
@@ -69,23 +72,82 @@ function getTokenStoragePreference() {
 }
 
 async function refreshAccessToken() {
-  const previousPreference = getTokenStoragePreference();
-  const data = await request("/auth/refresh", {
-    method: "POST",
-    body: JSON.stringify({}),
-  });
-
-  const nextAccessToken = data?.accessToken || "";
-  if (nextAccessToken) {
-    persistAccessToken(nextAccessToken, {
-      remember: previousPreference !== "session",
-    });
+  if (refreshInFlightPromise) {
+    return refreshInFlightPromise;
   }
 
-  return nextAccessToken;
+  const previousPreference = getTokenStoragePreference();
+  refreshInFlightPromise = (async () => {
+    const data = await request("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+
+    const nextAccessToken = data?.accessToken || "";
+    if (nextAccessToken) {
+      persistAccessToken(nextAccessToken, {
+        remember: previousPreference !== "session",
+      });
+    }
+
+    return nextAccessToken;
+  })().finally(() => {
+    refreshInFlightPromise = null;
+  });
+
+  return refreshInFlightPromise;
+}
+
+function decodeJwtPayload(token) {
+  if (!token || typeof token !== "string") {
+    return null;
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  if (typeof atob !== "function") {
+    return null;
+  }
+
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const paddingLength = (4 - (base64.length % 4)) % 4;
+    const paddedBase64 = `${base64}${"=".repeat(paddingLength)}`;
+    const payload = atob(paddedBase64);
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
+function shouldRefreshAccessToken(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== "number") {
+    return false;
+  }
+
+  const nowInSeconds = Math.floor(Date.now() / 1000);
+  const secondsUntilExpiry = payload.exp - nowInSeconds;
+  return secondsUntilExpiry <= ACCESS_TOKEN_REFRESH_BUFFER_SECONDS;
 }
 
 async function requestWithAccessTokenRetry(path, { accessToken, method = "GET", body } = {}) {
+  let requestAccessToken = accessToken;
+
+  if (requestAccessToken && shouldRefreshAccessToken(requestAccessToken)) {
+    try {
+      const proactivelyRefreshedAccessToken = await refreshAccessToken();
+      if (proactivelyRefreshedAccessToken) {
+        requestAccessToken = proactivelyRefreshedAccessToken;
+      }
+    } catch {
+      // Continue with current token; request retry path still handles 401.
+    }
+  }
+
   const buildOptions = (token) => ({
     method,
     headers: token
@@ -97,7 +159,7 @@ async function requestWithAccessTokenRetry(path, { accessToken, method = "GET", 
   });
 
   try {
-    return await request(path, buildOptions(accessToken));
+    return await request(path, buildOptions(requestAccessToken));
   } catch (error) {
     if (!(error instanceof AuthRequestError) || error.statusCode !== 401) {
       throw error;

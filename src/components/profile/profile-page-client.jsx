@@ -12,10 +12,15 @@ import {
   clearStoredAccessToken,
   getAuthErrorMessage,
   getStoredAccessToken,
-  getUsersMe,
-  isUnauthorizedAuthError,
   updateUsersMe,
 } from "@/lib/auth-client";
+import {
+  clearCurrentUserState,
+  loadCurrentUser,
+  readCurrentUserState,
+  setCurrentUserState,
+  subscribeCurrentUser,
+} from "@/lib/current-user-store";
 
 function formatDate(value) {
   if (!value) {
@@ -38,63 +43,77 @@ function formatDate(value) {
 
 export function ProfilePageClient() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const initialUserState = readCurrentUserState();
+  const [isLoading, setIsLoading] = useState(() => {
+    const hasToken = Boolean(getStoredAccessToken());
+    return initialUserState.isLoading || (!initialUserState.hasResolved && hasToken);
+  });
   const [isSaving, setIsSaving] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(initialUserState.user);
   const [name, setName] = useState("");
   const [initialName, setInitialName] = useState("");
 
   useEffect(() => {
     let active = true;
+    const applyUserState = (nextState) => {
+      if (!active) {
+        return;
+      }
+
+      const hasToken = Boolean(getStoredAccessToken());
+      setCurrentUser(nextState.user);
+      setIsLoading(nextState.isLoading || (!nextState.hasResolved && hasToken));
+    };
+
+    applyUserState(readCurrentUserState());
+    const unsubscribe = subscribeCurrentUser(applyUserState);
 
     const loadProfile = async () => {
       const accessToken = getStoredAccessToken();
       if (!accessToken) {
+        unsubscribe();
+        setIsLoading(false);
         router.replace("/login");
         return;
       }
 
       try {
-        const data = await getUsersMe({ accessToken });
+        const user = await loadCurrentUser();
         if (!active) {
           return;
         }
 
-        const user = data?.user || null;
         if (!user) {
+          unsubscribe();
           router.replace("/login");
           return;
         }
-
-        const resolvedName = typeof user.name === "string" ? user.name : "";
-        setCurrentUser(user);
-        setName(resolvedName);
-        setInitialName(resolvedName);
       } catch (error) {
         if (!active) {
           return;
         }
 
-        if (isUnauthorizedAuthError(error)) {
-          clearStoredAccessToken();
-          router.replace("/login");
-          return;
-        }
-
         toast.error(getAuthErrorMessage(error));
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
       }
     };
 
-    loadProfile();
+    void loadProfile();
 
     return () => {
       active = false;
+      unsubscribe();
     };
   }, [router]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    const resolvedName = typeof currentUser.name === "string" ? currentUser.name : "";
+    setName(resolvedName);
+    setInitialName(resolvedName);
+  }, [currentUser]);
 
   const trimmedName = name.trim();
   const isNameValid = trimmedName.length >= 2 && trimmedName.length <= 80;
@@ -118,6 +137,7 @@ export function ProfilePageClient() {
     const accessToken = getStoredAccessToken();
     if (!accessToken) {
       clearStoredAccessToken();
+      clearCurrentUserState();
       router.replace("/login");
       return;
     }
@@ -134,13 +154,12 @@ export function ProfilePageClient() {
         throw new Error("Invalid profile response.");
       }
 
-      setCurrentUser(user);
-      setName(user.name || "");
-      setInitialName(user.name || "");
+      setCurrentUserState(user);
       toast.success("Profile updated");
     } catch (error) {
-      if (isUnauthorizedAuthError(error)) {
+      if (error?.statusCode === 401) {
         clearStoredAccessToken();
+        clearCurrentUserState();
         router.replace("/login");
         return;
       }
@@ -252,4 +271,3 @@ export function ProfilePageClient() {
     </div>
   );
 }
-

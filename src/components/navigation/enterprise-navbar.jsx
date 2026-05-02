@@ -8,11 +8,15 @@ import { ChevronDown, Grid2x2Check, Loader2, LogOut, Menu, UserCircle2, X } from
 import { Button } from "@/components/ui/button";
 import {
   clearStoredAccessToken,
-  getCurrentUser,
   getStoredAccessToken,
-  isUnauthorizedAuthError,
   logoutSession,
 } from "@/lib/auth-client";
+import {
+  clearCurrentUserState,
+  loadCurrentUser,
+  readCurrentUserState,
+  subscribeCurrentUser,
+} from "@/lib/current-user-store";
 import { cn } from "@/lib/utils";
 
 const BASE_NAV_ITEMS = [
@@ -40,9 +44,13 @@ function getCircleLabel(user) {
 export function EnterpriseNavbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const initialUserState = readCurrentUserState();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(() => {
+    const hasToken = Boolean(getStoredAccessToken());
+    return initialUserState.isLoading || (!initialUserState.hasResolved && hasToken);
+  });
+  const [currentUser, setCurrentUser] = useState(initialUserState.user);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const userMenuRef = useRef(null);
@@ -59,59 +67,27 @@ export function EnterpriseNavbar() {
   );
 
   useEffect(() => {
-    setIsOpen(false);
-    setIsUserMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     let active = true;
 
-    const checkAuth = async () => {
-      const accessToken = getStoredAccessToken();
-
-      if (!accessToken) {
-        if (active) {
-          setCurrentUser(null);
-          setIsCheckingAuth(false);
-        }
+    const applyUserState = (nextState) => {
+      if (!active) {
         return;
       }
 
-      try {
-        const data = await getCurrentUser({ accessToken });
-
-        if (!active) {
-          return;
-        }
-
-        if (data?.user) {
-          setCurrentUser(data.user);
-        } else {
-          setCurrentUser(null);
-          clearStoredAccessToken();
-        }
-      } catch (error) {
-        if (!active) {
-          return;
-        }
-
-        if (isUnauthorizedAuthError(error)) {
-          setCurrentUser(null);
-          clearStoredAccessToken();
-        }
-      } finally {
-        if (active) {
-          setIsCheckingAuth(false);
-        }
-      }
+      const hasToken = Boolean(getStoredAccessToken());
+      setCurrentUser(nextState.user);
+      setIsCheckingAuth(nextState.isLoading || (!nextState.hasResolved && hasToken));
     };
 
-    checkAuth();
+    applyUserState(readCurrentUserState());
+    const unsubscribe = subscribeCurrentUser(applyUserState);
+    void loadCurrentUser().catch(() => {});
 
     return () => {
       active = false;
+      unsubscribe();
     };
-  }, [pathname]);
+  }, []);
 
   useEffect(() => {
     if (!isOpen && !isUserMenuOpen) {
@@ -161,6 +137,7 @@ export function EnterpriseNavbar() {
     }
 
     clearStoredAccessToken();
+    clearCurrentUserState();
     setCurrentUser(null);
     setIsUserMenuOpen(false);
     setIsOpen(false);
