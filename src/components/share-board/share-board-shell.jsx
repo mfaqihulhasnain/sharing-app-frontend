@@ -452,12 +452,13 @@ export function ShareBoardShell() {
       return;
     }
 
+    toast.success("Share deleted");
+
     try {
       await deleteShare({
         accessToken: getStoredAccessToken() || undefined,
         id: shareId,
       });
-      toast.success("Share deleted");
     } catch (error) {
       if (removedShare) {
         setShares((currentShares) => mergeShares(currentShares, [removedShare]));
