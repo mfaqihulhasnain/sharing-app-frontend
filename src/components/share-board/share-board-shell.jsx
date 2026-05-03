@@ -289,8 +289,14 @@ export function ShareBoardShell() {
     peopleById,
     viewerActorId,
     topic,
+    status: presenceStatus,
   } = usePresenceState();
   const currentUser = presenceCurrentUser || fallbackCurrentUser;
+  const isPresenceHydrating =
+    !viewerActorId ||
+    presenceStatus === "idle" ||
+    presenceStatus === "bootstrapping" ||
+    presenceStatus === "connecting";
   const initialShares = readShareSnapshot(viewerActorId);
 
   const [shares, setShares] = useState(() => initialShares);
@@ -719,6 +725,7 @@ export function ShareBoardShell() {
               users={directoryUsers}
               selectedUserIds={effectiveSelectedUserIds}
               onToggleUser={toggleUser}
+              isHydrating={isPresenceHydrating}
             />
           </aside>
         </main>
