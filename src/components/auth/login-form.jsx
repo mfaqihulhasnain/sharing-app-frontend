@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
 import { PasswordInput } from "@/components/auth/password-input";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import {
   hasRequiredPasswordComplexity,
   isValidEmail,
@@ -60,6 +61,8 @@ export function LoginForm() {
   const [serverError, setServerError] = useState("");
   const [showResendVerificationAction, setShowResendVerificationAction] = useState(false);
   const googleAuthStartUrl = getGoogleAuthStartUrl();
+  const hasInlineError = Boolean(serverError);
+  const inlineMessage = serverError || formHint;
 
   const errors = useMemo(() => validateLogin(values), [values]);
 
@@ -176,7 +179,11 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-4 [@media(max-height:860px)]:space-y-3 [@media(max-height:760px)]:space-y-2.5"
+    >
       <LabeledInput
         label="Email"
         name="email"
@@ -189,6 +196,7 @@ export function LoginForm() {
         onBlur={() => handleBlur("email")}
         disabled={isSubmitting}
         error={displayError("email")}
+        className="h-10 text-[13px]"
       />
 
       <PasswordInput
@@ -202,10 +210,11 @@ export function LoginForm() {
         onBlur={() => handleBlur("password")}
         disabled={isSubmitting}
         error={displayError("password")}
+        className="h-10 text-[13px]"
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 [@media(max-height:760px)]:pt-0">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-muted [@media(max-height:760px)]:text-xs">
           <input
             type="checkbox"
             checked={values.rememberMe}
@@ -218,7 +227,7 @@ export function LoginForm() {
 
         <Link
           href="/forgot-password"
-          className="text-sm font-medium text-foreground underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+          className="text-sm font-medium text-foreground underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 [@media(max-height:760px)]:text-xs"
         >
           Forgot password?
         </Link>
@@ -226,7 +235,7 @@ export function LoginForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full rounded-xl text-sm font-semibold shadow-none"
+        className="h-10 w-full rounded-xl text-sm font-semibold shadow-none"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -239,19 +248,15 @@ export function LoginForm() {
         )}
       </Button>
 
-      <Button type="button" variant="outline" className="h-11 w-full rounded-xl text-sm" asChild>
-        <a href={googleAuthStartUrl}>Continue with Google</a>
-      </Button>
-
-      {formHint ? (
-        <p className="rounded-lg border border-accent-border bg-accent-soft/65 px-3 py-2 text-xs leading-5 text-muted">
-          {formHint}
-        </p>
-      ) : null}
-
-      {serverError ? (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
-          {serverError}
+      {inlineMessage ? (
+        <p
+          className={
+            hasInlineError
+              ? "rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs leading-5 text-destructive [@media(max-height:760px)]:leading-4"
+              : "rounded-lg border border-accent-border bg-accent-soft/65 px-3 py-1.5 text-xs leading-5 text-muted [@media(max-height:760px)]:leading-4"
+          }
+        >
+          {inlineMessage}
         </p>
       ) : null}
 
@@ -259,7 +264,7 @@ export function LoginForm() {
         <Button
           type="button"
           variant="outline"
-          className="h-10 w-full rounded-xl text-sm"
+          className="h-9 w-full rounded-xl text-sm"
           onClick={handleResendVerification}
           disabled={isResendingVerification || isSubmitting}
         >
@@ -273,6 +278,17 @@ export function LoginForm() {
           )}
         </Button>
       ) : null}
+
+      <div className="relative py-0.5">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-line/80" />
+        </div>
+        <p className="relative mx-auto w-fit bg-card-strong px-2 text-[11px] font-medium tracking-wide text-muted uppercase">
+          Or continue with
+        </p>
+      </div>
+
+      <GoogleAuthButton href={googleAuthStartUrl} action="sign_in" />
     </form>
   );
 }

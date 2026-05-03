@@ -17,6 +17,7 @@ export function PasswordInput({
   name,
   disabled = false,
   onBlur,
+  className,
 }) {
   const generatedId = useId();
   const fieldId = id || generatedId;
@@ -46,6 +47,7 @@ export function PasswordInput({
             Icon ? "pl-10" : "",
             error &&
               "border-destructive/45 focus-visible:border-destructive/55 focus-visible:ring-destructive/15",
+            className,
           )}
         />
         {Icon ? (

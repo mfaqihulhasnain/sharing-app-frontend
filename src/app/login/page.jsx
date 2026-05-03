@@ -12,8 +12,9 @@ export default function LoginPage() {
   return (
     <AuthRouteGuard>
       <AuthShell
+        showSidebar={false}
         title="Welcome back"
-        description="Sign in to continue sharing notes and files with your team."
+        description="Sign in to continue with your workspace."
         footer={
           <>
             Don&apos;t have an account? <Link href="/register">Create one</Link>

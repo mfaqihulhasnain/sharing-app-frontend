@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LabeledInput } from "@/components/auth/labeled-input";
 import { PasswordInput } from "@/components/auth/password-input";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import {
   getPasswordChecks,
   getPasswordStrength,
@@ -133,7 +134,11 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-4 [@media(max-height:860px)]:space-y-3 [@media(max-height:760px)]:space-y-2.5"
+    >
       <LabeledInput
         label="Email"
         name="email"
@@ -146,6 +151,7 @@ export function RegisterForm() {
         onBlur={() => handleBlur("email")}
         disabled={isSubmitting}
         error={displayError("email")}
+        className="h-10 text-[13px]"
       />
 
       <PasswordInput
@@ -159,35 +165,38 @@ export function RegisterForm() {
         onBlur={() => handleBlur("password")}
         disabled={isSubmitting}
         error={displayError("password")}
+        className="h-10 text-[13px]"
       />
 
-      <div className="rounded-xl border border-line/80 bg-card-muted/45 px-3.5 py-3">
-        <div className="mb-2 flex items-center justify-between gap-2 text-xs">
-          <p className="font-medium text-muted">Password strength</p>
-          <p className={cn("font-semibold", passwordStrength.textClassName)}>
-            {passwordStrength.label}
-          </p>
+      {values.password ? (
+        <div className="rounded-xl border border-line/80 bg-card-muted/45 px-3.5 py-3 [@media(max-height:760px)]:px-3 [@media(max-height:760px)]:py-2">
+          <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+            <p className="font-medium text-muted">Password strength</p>
+            <p className={cn("font-semibold", passwordStrength.textClassName)}>
+              {passwordStrength.label}
+            </p>
+          </div>
+          <div className="h-1.5 rounded-full bg-line/90">
+            <div
+              className={cn("h-full rounded-full transition-all", passwordStrength.barClassName)}
+              style={{ width: `${strengthProgress}%` }}
+              role="presentation"
+            />
+          </div>
+          <ul className="mt-3 grid gap-1 sm:grid-cols-2 [@media(max-height:760px)]:mt-2">
+            {passwordChecks.map((item) => (
+              <li key={item.key} className="inline-flex items-center gap-1.5 text-xs text-muted">
+                {item.passed ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Circle className="h-3.5 w-3.5 text-muted" />
+                )}
+                {item.label}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="h-1.5 rounded-full bg-line/90">
-          <div
-            className={cn("h-full rounded-full transition-all", passwordStrength.barClassName)}
-            style={{ width: `${strengthProgress}%` }}
-            role="presentation"
-          />
-        </div>
-        <ul className="mt-3 grid gap-1 sm:grid-cols-2">
-          {passwordChecks.map((item) => (
-            <li key={item.key} className="inline-flex items-center gap-1.5 text-xs text-muted">
-              {item.passed ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-              ) : (
-                <Circle className="h-3.5 w-3.5 text-muted" />
-              )}
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </div>
+      ) : null}
 
       <PasswordInput
         label="Confirm password"
@@ -200,10 +209,11 @@ export function RegisterForm() {
         onBlur={() => handleBlur("confirmPassword")}
         disabled={isSubmitting}
         error={displayError("confirmPassword")}
+        className="h-10 text-[13px]"
       />
 
-      <div className="space-y-1.5">
-        <label className="inline-flex cursor-pointer items-start gap-2.5 text-sm leading-6 text-muted">
+      <div className="space-y-1.5 [@media(max-height:760px)]:space-y-1">
+        <label className="inline-flex cursor-pointer items-start gap-2.5 text-sm leading-6 text-muted [@media(max-height:760px)]:text-xs [@media(max-height:760px)]:leading-5">
           <input
             type="checkbox"
             checked={values.acceptTerms}
@@ -214,14 +224,14 @@ export function RegisterForm() {
           <span>
             I agree to the{" "}
             <Link
-              href="#"
+              href="/terms"
               className="font-medium text-foreground underline-offset-4 transition hover:underline"
             >
               Terms
             </Link>{" "}
             and{" "}
             <Link
-              href="#"
+              href="/privacy"
               className="font-medium text-foreground underline-offset-4 transition hover:underline"
             >
               Privacy Policy
@@ -236,7 +246,7 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        className="h-11 w-full rounded-xl text-sm font-semibold shadow-none"
+        className="h-10 w-full rounded-xl text-sm font-semibold shadow-none"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -249,12 +259,19 @@ export function RegisterForm() {
         )}
       </Button>
 
-      <Button type="button" variant="outline" className="h-11 w-full rounded-xl text-sm" asChild>
-        <a href={googleAuthStartUrl}>Continue with Google</a>
-      </Button>
+      <div className="relative py-0.5">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-line/80" />
+        </div>
+        <p className="relative mx-auto w-fit bg-card-strong px-2 text-[11px] font-medium tracking-wide text-muted uppercase">
+          Or continue with
+        </p>
+      </div>
+
+      <GoogleAuthButton href={googleAuthStartUrl} action="sign_up" />
 
       {serverError ? (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive">
+        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs leading-5 text-destructive [@media(max-height:760px)]:leading-4">
           {serverError}
         </p>
       ) : null}

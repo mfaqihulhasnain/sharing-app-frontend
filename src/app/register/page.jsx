@@ -12,8 +12,9 @@ export default function RegisterPage() {
   return (
     <AuthRouteGuard>
       <AuthShell
+        showSidebar={false}
         title="Create your account"
-        description="Set up your profile to start sharing securely on the local board."
+        description="Create your account to start sharing with your team."
         footer={
           <>
             Already have an account? <Link href="/login">Sign in</Link>
