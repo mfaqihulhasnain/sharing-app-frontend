@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 const BASE_NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
-  { label: "How It Works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },

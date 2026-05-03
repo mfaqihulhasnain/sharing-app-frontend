@@ -13,6 +13,8 @@ export default function RegisterPage() {
     <AuthRouteGuard>
       <AuthShell
         showSidebar={false}
+        showBrand={false}
+        showBackHome={true}
         title="Create your account"
         description="Create your account to start sharing with your team."
         footer={

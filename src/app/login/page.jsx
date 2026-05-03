@@ -13,6 +13,8 @@ export default function LoginPage() {
     <AuthRouteGuard>
       <AuthShell
         showSidebar={false}
+        showBrand={false}
+        showBackHome={true}
         title="Welcome back"
         description="Sign in to continue with your workspace."
         footer={
