@@ -216,17 +216,17 @@ const FAQ_ITEMS = [
   {
     question: "Can we control who sees each update?",
     answer:
-      "Yes. Every post has a visibility setting — share with everyone, or only specific people. It's one click, per post. No complex permissions setup needed.",
+      "Yes. When you create a post, you choose one of two options: share it with everyone currently on the WiFi network, or share it only with specific people you select. That's the full extent of the visibility control — and it's all you need.",
   },
   {
-    question: "How is this different from Slack or email?",
+    question: "How is this different from a group chat?",
     answer:
-      "Chat tools are great for conversation. Sharing Board is built for structured handoffs — where files, context, and updates stay together, and visibility is always intentional.",
+      "Group chats show everything to everyone. Sharing Board lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
   },
   {
-    question: "Can different departments use this together?",
+    question: "Can people outside our office see the board?",
     answer:
-      "Yes — this is where it shines. Ops, finance, legal, design, and leadership can all work from one shared board, each seeing what's relevant to them.",
+      "No. The board is only accessible to people connected to the same WiFi network. Anyone outside your local network — whether that's another building, a remote worker, or anyone on mobile data — cannot access it.",
   },
 ];
 
@@ -339,7 +339,7 @@ function ProductPreview() {
               <span className="ml-auto text-[10px] text-muted">1:12 PM</span>
             </div>
             <p className="text-[11px] leading-[1.5] text-foreground/80">
-              Weekly design review notes attached. All teams welcome to review.
+              Weekly design review notes attached. Visible to everyone on the network
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="inline-flex items-center gap-1 text-[10px] font-medium rounded-md px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200">
@@ -425,7 +425,7 @@ export function FeaturesPageClient() {
                   <div className="flex items-center gap-2 w-fit rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5">
                     <LiveDot />
                     <span className="text-[11px] font-medium text-emerald-700">
-                      Now live for all teams
+                      Works over your local WiFi
                     </span>
                   </div>
 
@@ -439,9 +439,10 @@ export function FeaturesPageClient() {
                       in sync.
                     </h1>
                     <p className="max-w-lg text-sm sm:text-base font-light leading-7 text-muted">
-                      Sharing Board replaces scattered emails, chat threads, and file dumps with
-                      one calm, organised place — where every update is clear, every file is
-                      findable, and everyone knows exactly what's happening.
+                      Sharing Board gives every person on your WiFi a single shared board — where
+                      updates appear instantly, files stay in context, and every post reaches
+                      exactly who it should. No group chats. No scattered messages. Just one clear
+                      place for everyone in the room.
                     </p>
                   </div>
 
@@ -461,9 +462,9 @@ export function FeaturesPageClient() {
                   {/* Stats row */}
                   <div className="flex flex-wrap gap-6 pt-5 border-t border-line/70">
                     {[
-                      { n: "3 min", l: "avg. setup time" },
-                      { n: "Zero", l: "tech skills needed" },
-                      { n: "Any team", l: "ops, finance, design, admin" },
+                      { n: "On your WiFi", l: "accessible to your whole local team" },
+                      { n: "Two options", l: "everyone on network, or selected people only" },
+                      { n: "Instant", l: "posts appear live the moment they're sent" },
                     ].map((s) => (
                       <div key={s.l}>
                         <p className="font-serif text-xl font-light tracking-tight text-foreground">
@@ -497,16 +498,8 @@ export function FeaturesPageClient() {
             <motion.div variants={fadeUp} transition={{ duration: 0.35 }}>
               <SectionHeader
                 label="Why it matters"
-                title={
-                  <>
-                    Your team is working hard. But{" "}
-                    <em className="italic" style={{ color: "var(--accent, #1a56f5)", fontStyle: "italic" }}>
-                      scattered
-                    </em>{" "}
-                    communication quietly kills progress.
-                  </>
-                }
-                description="When updates live across email, Slack, and shared drives, things fall through the cracks — not from a lack of effort, but from a lack of one clear place."
+                title="Your team is in the same room. But scattered messages mean no one has the full picture."
+                description="When updates go into group chats, private messages, and verbal handoffs, things fall through the cracks. Sharing Board gives everyone on the same WiFi one place to post, read, and act — instantly."
               />
             </motion.div>
 
@@ -669,7 +662,7 @@ export function FeaturesPageClient() {
                     </em>
                   </>
                 }
-                description="Not just for tech. Sharing Board was designed for the teams that keep businesses running day to day."
+                description="If your team shares a physical space and a WiFi connection, this is for you. No technical knowledge needed."
               />
             </motion.div>
 
@@ -714,7 +707,7 @@ export function FeaturesPageClient() {
               <SectionHeader
                 label="Why Sharing Board"
                 title="The old way costs you more than you realise."
-                description="Every hour spent chasing updates, re-sending files, or clarifying who should see what is an hour not spent on real work."
+                description="Every message sent in the wrong place — a group chat, a private message, a verbal update — is a moment of clarity your team never gets back."
               />
             </motion.div>
 
@@ -775,7 +768,7 @@ export function FeaturesPageClient() {
                     </em>
                   </>
                 }
-                description="Sharing Board is built with practical, business-grade safeguards — so your team can move fast without cutting corners on security."
+                description="Everything stays on your local network. Only people on your WiFi can see the board — and every post gives you full control over exactly who that means."
               />
             </motion.div>
 
@@ -870,7 +863,7 @@ export function FeaturesPageClient() {
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5">
                   <Sparkles className="h-3 w-3 text-white/50" />
                   <span className="text-[11px] font-medium text-white/60">
-                    Free to start · No credit card
+                    Works on your local WiFi · No technical setup
                   </span>
                 </div>
 
@@ -881,8 +874,8 @@ export function FeaturesPageClient() {
                 </h2>
 
                 <p className="text-sm sm:text-base font-light leading-7 text-white/50">
-                  Join teams who've replaced scattered tools with one calm, organised workspace.
-                  Setup takes three minutes.
+                  Connect to your WiFi, open the board, and your whole team is aligned from the
+                  first post. Setup takes under three minutes.
                 </p>
 
                 {/* CTAs */}

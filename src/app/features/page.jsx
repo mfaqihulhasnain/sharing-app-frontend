@@ -7,7 +7,7 @@ import { FeaturesPageClient } from "@/components/features/features-page-client";
 export const metadata = {
   title: "Features | Sharing Board — Secure Team Collaboration & File Sharing",
   description:
-    "Discover how Sharing Board helps your team share updates, files, and decisions in one organised workspace — with real-time visibility and simple audience controls. No tech skills required.",
+    "Discover how Sharing Board lets teams on the same WiFi share updates, files, and decisions in one live board — with per-post visibility control. Choose to share with everyone on the network or only selected people. No technical setup required.",
   keywords: [
     "team collaboration software",
     "secure file sharing for teams",
@@ -83,7 +83,7 @@ const faqSchema = {
       name: "How is Sharing Board different from Slack or email?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Chat tools are great for conversation. Sharing Board is built for structured handoffs — where files, context, and updates stay together, and visibility is always intentional.",
+        text: "Group chats show everything to everyone. Sharing Board lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
       },
     },
     {
@@ -91,7 +91,7 @@ const faqSchema = {
       name: "Can different departments use Sharing Board together?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes — this is where it shines. Ops, finance, legal, design, and leadership can all work from one shared board, each seeing what's relevant to them.",
+        text: "No. The board is only accessible to people connected to the same WiFi network. Anyone outside your local network — whether that's another building, a remote worker, or anyone on mobile data — cannot access it.",
       },
     },
   ],
