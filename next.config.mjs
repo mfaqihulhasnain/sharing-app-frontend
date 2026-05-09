@@ -55,6 +55,11 @@ function resolveDistDir() {
     return process.env.NEXT_DIST_DIR;
   }
 
+  // Keep Vercel on the default output folder expected by platform tooling.
+  if (process.env.VERCEL) {
+    return ".next";
+  }
+
   const branch = resolveGitBranch(process.cwd());
   if (!branch) {
     return ".next";
