@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -8,7 +8,28 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { getAuthErrorMessage, verifyEmailToken } from "@/lib/auth-client";
 
-export default function VerifyEmailPage() {
+function VerifyEmailLoadingState() {
+  return (
+    <AuthShell
+      title="Verify your email"
+      description="We are confirming your account so you can start using Sharing Board."
+      footer={
+        <>
+          Back to <Link href="/login">Login</Link>
+        </>
+      }
+    >
+      <div className="rounded-lg border border-line/80 bg-card-muted/50 px-3 py-2.5 text-sm text-muted">
+        <span className="inline-flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Preparing verification...
+        </span>
+      </div>
+    </AuthShell>
+  );
+}
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   const [status, setStatus] = useState("idle");
@@ -92,5 +113,13 @@ export default function VerifyEmailPage() {
         </Button>
       </div>
     </AuthShell>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<VerifyEmailLoadingState />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
