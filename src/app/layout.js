@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppPresenceProvider } from "@/components/presence/app-presence-provider";
+import { Footer } from "@/components/footer/footer";
 import { AppToaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <AppPresenceProvider>{children}</AppPresenceProvider>
+        <Footer />
         <AppToaster />
       </body>
     </html>

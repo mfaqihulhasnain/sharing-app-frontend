@@ -33,8 +33,6 @@ import { cn } from "@/lib/utils";
 const BASE_NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
