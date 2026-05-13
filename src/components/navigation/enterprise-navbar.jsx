@@ -100,15 +100,7 @@ export function EnterpriseNavbar() {
   const isSignedIn = Boolean(currentUser);
 
   /* ── navItems memo exactly as original ── */
-  const navItems = useMemo(
-    () =>
-      isSignedIn
-        ? BASE_NAV_ITEMS
-        : isCheckingAuth
-          ? BASE_NAV_ITEMS
-          : [...BASE_NAV_ITEMS, { label: "Login", href: "/login" }],
-    [isSignedIn, isCheckingAuth],
-  );
+  const navItems = useMemo(() => BASE_NAV_ITEMS, []);
 
   /* ── Auth loading effect exactly as original ── */
   useEffect(() => {

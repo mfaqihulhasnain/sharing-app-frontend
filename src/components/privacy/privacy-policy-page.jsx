@@ -189,7 +189,7 @@ export function PrivacyPolicyPage() {
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <div className="relative mx-auto flex w-full max-w-330 flex-col gap-4">
         <EnterpriseNavbar />
 
         <main className="space-y-5 pb-16 pt-4">
