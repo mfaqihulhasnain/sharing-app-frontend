@@ -1,46 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { Wifi } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ArrowRight, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/* ─────────────────────────────────────────────
-   DATA
-───────────────────────────────────────────── */
-
-const NAV_COLUMNS = [
+const FOOTER_LINK_GROUPS = [
   {
     heading: "Product",
     links: [
+      { label: "Home", href: "/" },
       { label: "Features", href: "/features" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "How it works", href: "/#how-it-works" },
+      { label: "Open board", href: "/#share-composer" },
     ],
   },
   {
-    heading: "Company",
+    heading: "Account",
     links: [
-      { label: "About", href: "/about" },
-      { label: "Contact", href: "/contact" },
+      { label: "Create account", href: "/register" },
+      { label: "Sign in", href: "/login" },
+      { label: "Reset password", href: "/forgot-password" },
     ],
   },
   {
     heading: "Legal",
     links: [
       { label: "Privacy policy", href: "/privacy" },
-      { label: "Terms of service", href: "/terms" },
+      { label: "Terms of use", href: "/terms" },
     ],
   },
 ];
 
-/* ─────────────────────────────────────────────
-   SUB-COMPONENTS
-───────────────────────────────────────────── */
-
 function BrandMark() {
   return (
-    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[7px] bg-white">
-      <div className="h-[10px] w-[10px] rounded-[2.5px] border-[1.8px] border-[#0d0e12]" />
+    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[9px] bg-white">
+      <div className="h-[11px] w-[11px] rounded-[3px] border-[1.8px] border-[#0c111a]" />
     </div>
   );
 }
@@ -54,27 +48,40 @@ function LiveDot() {
   );
 }
 
-/* ─────────────────────────────────────────────
-   MAIN EXPORT
-───────────────────────────────────────────── */
+function isLinkActive(pathname, href) {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  const [pathPart] = href.split("#");
+  if (!pathPart || pathPart === "/") {
+    return pathname === "/";
+  }
+
+  return pathname === pathPart || pathname.startsWith(`${pathPart}/`);
+}
 
 export function Footer() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto w-full">
-      <div className="w-full overflow-hidden bg-[#0d0e12]">
+    <footer className="relative mt-auto w-full overflow-hidden border-t border-white/10 bg-[#050913] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 top-8 h-44 w-44 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-10 h-52 w-52 rounded-full bg-blue-500/10 blur-3xl" />
+      </div>
 
-        {/* ── MAIN CONTENT ── */}
-        <div className="grid gap-10 p-8 sm:p-10 lg:grid-cols-[1.6fr_repeat(3,1fr)]">
-
-          {/* Brand column */}
-          <div className="flex flex-col gap-4">
-            {/* Logo row */}
-            <div className="flex items-center gap-2">
+      <div className="relative mx-auto w-full max-w-330 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]">
+          <div className="space-y-5">
+            <Link
+              href="/"
+              className="group inline-flex items-center gap-2 rounded-lg px-1 py-1 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+            >
               <BrandMark />
               <span
-                className="text-[15px] tracking-[-0.3px] text-white"
+                className="text-[17px] tracking-[-0.3px] text-white"
                 style={{
                   fontFamily: "var(--font-serif, Georgia, serif)",
                   fontWeight: 400,
@@ -82,58 +89,80 @@ export function Footer() {
               >
                 Sharing Board
               </span>
-            </div>
+            </Link>
 
-            {/* Tagline */}
             <p
-              className="max-w-[200px] text-[18px] font-light leading-[1.3] tracking-[-0.03em] text-white/85"
+              className="max-w-[18rem] text-[1.95rem] leading-[1.07] tracking-[-0.05em] text-white/95"
               style={{ fontFamily: "var(--font-serif, Georgia, serif)" }}
             >
-              One board. Everyone in the room.{" "}
-              <em
-                className="not-italic"
-                style={{ fontStyle: "italic", color: "rgba(255,255,255,0.45)" }}
-              >
-                Always in sync.
-              </em>
+              Built for local-first teams.
             </p>
 
-            {/* WiFi badge */}
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-800/50 bg-emerald-950/50 px-3 py-1.5">
+            <p className="max-w-[23rem] text-[13.5px] leading-6 text-white/55">
+              One shared board for fast handoffs, clear updates, and better
+              coordination across the same network.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[12px] font-medium text-[#0a0f18] transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              >
+                Start free
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/features"
+                className="inline-flex items-center rounded-full border border-white/20 px-3.5 py-1.5 text-[12px] font-medium text-white/75 transition hover:border-white/35 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+              >
+                Explore features
+              </Link>
+            </div>
+
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-800/50 bg-emerald-950/45 px-3 py-1.5">
               <LiveDot />
+              <Wifi className="h-3.5 w-3.5 text-emerald-300/90" />
               <span className="text-[11px] font-medium text-emerald-300">
                 Runs on your local WiFi
               </span>
             </div>
           </div>
 
-          {/* Nav columns */}
-          {NAV_COLUMNS.map((col) => (
-            <div key={col.heading} className="flex flex-col gap-3">
-              <p className="text-[11px] font-medium uppercase tracking-[1.3px] text-white/35">
-                {col.heading}
+          {FOOTER_LINK_GROUPS.map((group) => (
+            <div key={group.heading} className="space-y-3">
+              <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-white/35">
+                {group.heading}
               </p>
-              <nav className="flex flex-col gap-2">
-                {col.links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="text-[13px] font-light text-white/55 transition-colors duration-150 hover:text-white/90 focus-visible:outline-none focus-visible:text-white/90"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+              <nav aria-label={`${group.heading} links`} className="flex flex-col gap-2">
+                {group.links.map((link) => {
+                  const active = isLinkActive(pathname, link.href);
+
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        "w-fit rounded-md px-1 py-0.5 text-[14px] font-light transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
+                        active
+                          ? "text-white"
+                          : "text-white/58 hover:text-white/90",
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
               </nav>
             </div>
           ))}
         </div>
 
-        {/* ── BOTTOM BAR ── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] px-8 py-4 sm:px-10">
-          <p className="text-[12px] font-light text-white/30">
+        <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+          <p className="text-[12px] text-white/32">
             &copy; {currentYear} Sharing Board. All rights reserved.
           </p>
-          <p className="flex items-center gap-1.5 text-[12px] font-light text-white/25">
+
+          <p className="inline-flex items-center gap-1.5 text-[12px] text-white/28">
             <svg
               width="11"
               height="11"
@@ -153,8 +182,8 @@ export function Footer() {
             Made with care for local teams
           </p>
         </div>
-
       </div>
     </footer>
   );
 }
+
