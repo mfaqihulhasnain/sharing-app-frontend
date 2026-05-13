@@ -1,33 +1,86 @@
-import Link from "next/link";
+import { PrivacyPolicyPage } from "@/components/privacy/privacy-policy-page";
+
+/* ─────────────────────────────────────────────
+   SEO METADATA
+───────────────────────────────────────────── */
 
 export const metadata = {
-  title: "Privacy | Sharing Board",
-  description: "Privacy policy for Sharing Board.",
+  title: "Privacy Policy | Sharing Board",
+  description:
+    "Sharing Board's privacy policy — written in plain English. Learn exactly what data we collect, how it is used, and why your information never leaves your local WiFi network.",
+  keywords: [
+    "Sharing Board privacy policy",
+    "local WiFi app privacy",
+    "team board data privacy",
+    "local network app data policy",
+    "Sharing Board data protection",
+  ],
+  alternates: {
+    canonical: "/privacy",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Privacy Policy | Sharing Board",
+    description:
+      "Your data never leaves your local WiFi. Read our plain-English privacy policy to understand exactly how Sharing Board handles your information.",
+    type: "website",
+    url: "/privacy",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | Sharing Board",
+    description:
+      "Plain-English privacy policy for Sharing Board — a local WiFi team board. Your data stays on your network, always.",
+  },
 };
+
+/* ─────────────────────────────────────────────
+   STRUCTURED DATA
+───────────────────────────────────────────── */
+
+const privacySchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Privacy Policy — Sharing Board",
+  description:
+    "Sharing Board's privacy policy. Sharing Board is a local WiFi team board — all data stays on the local network and never leaves. This policy explains what information is collected, how it is used, and how users can delete their data.",
+  url: "/privacy",
+  inLanguage: "en",
+  dateModified: "2025-01-01",
+  breadcrumb: {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Privacy Policy",
+        item: "/privacy",
+      },
+    ],
+  },
+};
+
+/* ─────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────── */
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <div className="rounded-3xl border border-line/90 bg-card-strong p-6 sm:p-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Privacy Policy
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          Sharing Board is designed to keep collaboration private and scoped to the
-          right audience. Account and usage data are processed only to run core
-          authentication, sharing, and security features.
-        </p>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          This page is a baseline legal placeholder and should be replaced with your
-          final privacy policy before production release.
-        </p>
-        <Link
-          href="/register"
-          className="mt-6 inline-flex text-sm font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Back to register
-        </Link>
-      </div>
-    </main>
+    <>
+      <PrivacyPolicyPage />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(privacySchema) }}
+      />
+    </>
   );
 }
