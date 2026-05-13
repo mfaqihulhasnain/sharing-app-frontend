@@ -62,8 +62,8 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto w-full px-4 pb-4 sm:px-5 lg:px-6">
-      <div className="mx-auto w-full max-w-330 overflow-hidden rounded-[20px] bg-[#0d0e12]">
+    <footer className="mt-auto w-full">
+      <div className="w-full overflow-hidden bg-[#0d0e12]">
 
         {/* ── MAIN CONTENT ── */}
         <div className="grid gap-10 p-8 sm:p-10 lg:grid-cols-[1.6fr_repeat(3,1fr)]">
