@@ -33,15 +33,15 @@ const FOOTER_LINK_GROUPS = [
 
 function BrandMark() {
   return (
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[9px] bg-white">
-      <div className="h-[11px] w-[11px] rounded-[3px] border-[1.8px] border-[#0c111a]" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-white">
+      <div className="h-2.75 w-2.75 rounded-[3px] border-[1.8px] border-[#0c111a]" />
     </div>
   );
 }
 
 function LiveDot() {
   return (
-    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+    <span className="relative flex h-1.5 w-1.5 shrink-0">
       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
     </span>
@@ -98,7 +98,7 @@ export function Footer() {
               Built for local-first teams.
             </p>
 
-            <p className="max-w-[23rem] text-[13.5px] leading-6 text-white/55">
+            <p className="max-w-92 text-[13.5px] leading-6 text-white/55">
               One shared board for fast handoffs, clear updates, and better
               coordination across the same network.
             </p>
@@ -169,7 +169,7 @@ export function Footer() {
               viewBox="0 0 12 12"
               fill="none"
               aria-hidden="true"
-              className="flex-shrink-0"
+              className="shrink-0"
             >
               <path
                 d="M6 10S1.5 7 1.5 4a2.5 2.5 0 015 0 2.5 2.5 0 015 0C11.5 7 6 10 6 10z"
@@ -186,4 +186,3 @@ export function Footer() {
     </footer>
   );
 }
-

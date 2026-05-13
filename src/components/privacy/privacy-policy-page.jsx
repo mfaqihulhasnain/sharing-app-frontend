@@ -88,7 +88,7 @@ const NO_COLLECT_ITEMS = [
 
 function LiveDot() {
   return (
-    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+    <span className="relative flex h-1.5 w-1.5 shrink-0">
       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
     </span>
@@ -127,7 +127,7 @@ function Callout({ variant = "green", icon: Icon, children }) {
         s.wrap
       )}
     >
-      <Icon className={cn("mt-0.5 h-4 w-4 flex-shrink-0", s.icon)} />
+      <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", s.icon)} />
       <p className={cn("text-[13px] font-light leading-relaxed", s.text)}>
         {children}
       </p>
@@ -148,14 +148,14 @@ function Section({ num, title, children }) {
     >
       <SectionDivider />
       <div className="flex items-start gap-3 pt-2">
-        <span className="mt-0.5 min-w-[22px] text-[11px] font-medium text-muted">
+        <span className="mt-0.5 min-w-5.5 text-[11px] font-medium text-muted">
           {num}
         </span>
         <h2 className="text-[18px] font-medium leading-snug tracking-[-0.02em] text-foreground">
           {title}
         </h2>
       </div>
-      <div className="space-y-3 pl-[34px]">{children}</div>
+      <div className="space-y-3 pl-8.5">{children}</div>
     </motion.div>
   );
 }
@@ -246,7 +246,7 @@ export function PrivacyPolicyPage() {
                     key={m.text}
                     className="flex items-center gap-1.5 text-[12px] text-muted"
                   >
-                    <m.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                    <m.icon className="h-3.5 w-3.5 shrink-0" />
                     {m.text}
                   </div>
                 ))}
@@ -273,7 +273,7 @@ export function PrivacyPolicyPage() {
                     transition={{ duration: 0.3 }}
                     className="flex items-start gap-3 rounded-xl border border-line/70 bg-card-strong p-3.5"
                   >
-                    <f.icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+                    <f.icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
                     <p className="text-[12.5px] font-light leading-[1.55] text-foreground">
                       {f.text}
                     </p>
@@ -301,11 +301,11 @@ export function PrivacyPolicyPage() {
                     key={item.num}
                     className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors duration-100 hover:bg-card-muted/50 cursor-pointer"
                   >
-                    <span className="min-w-[22px] text-[11px] font-medium text-muted">
+                    <span className="min-w-5.5 text-[11px] font-medium text-muted">
                       {item.num}
                     </span>
                     <ArrowRight
-                      className="h-3 w-3 flex-shrink-0"
+                      className="h-3 w-3 shrink-0"
                       style={{ color: "var(--accent, #1a56f5)" }}
                     />
                     <span
@@ -344,7 +344,7 @@ export function PrivacyPolicyPage() {
                   key={item}
                   className="flex items-center gap-2.5 rounded-lg bg-card-muted/50 px-3 py-2.5"
                 >
-                  <X className="h-3.5 w-3.5 flex-shrink-0 text-red-500" />
+                  <X className="h-3.5 w-3.5 shrink-0 text-red-500" />
                   <span className="text-[13px] font-light text-muted">
                     {item}
                   </span>
