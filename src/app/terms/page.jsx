@@ -1,31 +1,86 @@
-import Link from "next/link";
+import { TermsOfServicePage } from "@/components/terms/termscomponent";
+
+/* ─────────────────────────────────────────────
+   SEO METADATA
+───────────────────────────────────────────── */
 
 export const metadata = {
-  title: "Terms | Sharing Board",
-  description: "Terms of use for Sharing Board.",
+  title: "Terms of Service | Sharing Board",
+  description:
+    "Sharing Board's Terms of Service — written in plain English. Understand what you agree to, what you own, and how this relationship works. Fair, clear, and straightforward.",
+  keywords: [
+    "Sharing Board terms of service",
+    "Sharing Board terms and conditions",
+    "local WiFi app terms",
+    "team board terms of service",
+    "Sharing Board user agreement",
+  ],
+  alternates: {
+    canonical: "/terms",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Terms of Service | Sharing Board",
+    description:
+      "Plain-English Terms of Service for Sharing Board — a local WiFi team board. Fair, clear, and written to be actually read.",
+    type: "website",
+    url: "/terms",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service | Sharing Board",
+    description:
+      "Fair, plain-English Terms of Service for Sharing Board. You own your content. Your data stays on your WiFi. Leave any time.",
+  },
 };
+
+/* ─────────────────────────────────────────────
+   STRUCTURED DATA
+───────────────────────────────────────────── */
+
+const termsSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Terms of Service — Sharing Board",
+  description:
+    "Sharing Board's Terms of Service. Sharing Board is a local WiFi team board. This page explains what users agree to, what they own, visibility and sharing rules, account management, and governing law — written in plain English.",
+  url: "/terms",
+  inLanguage: "en",
+  dateModified: "2025-01-01",
+  breadcrumb: {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Terms of Service",
+        item: "/terms",
+      },
+    ],
+  },
+};
+
+/* ─────────────────────────────────────────────
+   PAGE
+───────────────────────────────────────────── */
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <div className="rounded-3xl border border-line/90 bg-card-strong p-6 sm:p-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Terms of Use</h1>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          Sharing Board is provided for secure, local collaboration. By using the
-          service, you agree to use it responsibly, respect access boundaries, and
-          avoid sharing unlawful or harmful content.
-        </p>
-        <p className="mt-3 text-sm leading-6 text-muted">
-          This page is a baseline legal placeholder and should be replaced with your
-          final legal terms before production release.
-        </p>
-        <Link
-          href="/register"
-          className="mt-6 inline-flex text-sm font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Back to register
-        </Link>
-      </div>
-    </main>
+    <>
+      <TermsOfServicePage />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(termsSchema) }}
+      />
+    </>
   );
 }
