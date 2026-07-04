@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Wifi } from "lucide-react";
+import { NearboardsLogo } from "@/components/brand/nearboards-logo";
 import { cn } from "@/lib/utils";
 
 const FOOTER_LINK_GROUPS = [
@@ -31,13 +32,6 @@ const FOOTER_LINK_GROUPS = [
   },
 ];
 
-function BrandMark() {
-  return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-white">
-      <div className="h-2.75 w-2.75 rounded-[3px] border-[1.8px] border-[#0c111a]" />
-    </div>
-  );
-}
 
 function LiveDot() {
   return (
@@ -79,16 +73,11 @@ export function Footer() {
               href="/"
               className="group inline-flex items-center gap-2 rounded-lg px-1 py-1 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
             >
-              <BrandMark />
-              <span
-                className="text-[17px] tracking-[-0.3px] text-white"
-                style={{
-                  fontFamily: "var(--font-serif, Georgia, serif)",
-                  fontWeight: 400,
-                }}
-              >
-                Nearboards
-              </span>
+              <NearboardsLogo
+                inverse
+                markClassName="h-8 w-8"
+                wordmarkClassName="text-[17px] text-white"
+              />
             </Link>
 
             <p

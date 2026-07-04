@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Grid2x2Check } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { NearboardsLogo } from "@/components/brand/nearboards-logo";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +39,10 @@ export function AuthShell({
                 href="/"
                 className="inline-flex w-fit items-center gap-2 rounded-xl px-1 py-1 transition hover:bg-card-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
               >
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                  <Grid2x2Check className="h-5 w-5" />
-                </span>
-                <span className="text-lg font-semibold tracking-tight text-foreground">
-                  Nearboards
-                </span>
+                <NearboardsLogo
+                  markClassName="h-10 w-10"
+                  wordmarkClassName="text-lg"
+                />
               </Link>
 
               <div className="space-y-3 [@media(max-height:860px)]:space-y-2">
@@ -98,12 +97,10 @@ export function AuthShell({
                       showSidebar ? "lg:hidden" : "mx-auto justify-center",
                     )}
                   >
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-accent">
-                      <Grid2x2Check className="h-4.5 w-4.5" />
-                    </span>
-                    <span className="text-base font-semibold tracking-tight text-foreground">
-                      Nearboards
-                    </span>
+                    <NearboardsLogo
+                      markClassName="h-9 w-9"
+                      wordmarkClassName="text-base"
+                    />
                   </Link>
                 ) : null}
                 <div className={cn("space-y-1 [@media(max-height:860px)]:space-y-0.5", !showSidebar && "space-y-1.5 text-center")}>

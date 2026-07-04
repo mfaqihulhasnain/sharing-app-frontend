@@ -17,6 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Nearboards",
   description: "A polished local network board for quick text and file sharing.",
+  icons: {
+    icon: [
+      { url: "/nearboards-mark.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {

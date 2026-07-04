@@ -1,0 +1,14 @@
+<svg width="440" height="96" viewBox="0 0 220 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="nearboards-logo-title">
+  <title id="nearboards-logo-title">Nearboards logo</title>
+  <g transform="translate(4 4)">
+    <rect x="1" y="1" width="38" height="38" rx="11" fill="#F8FBFF" stroke="#D8E4F2" stroke-width="1.5"/>
+    <path d="M12.7 27.3V12.7L27.3 27.3V12.7" stroke="#2563EB" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="8.3" y="8.3" width="9.2" height="9.2" rx="3" fill="#2563EB"/>
+    <rect x="8.3" y="22.5" width="9.2" height="9.2" rx="3" fill="#EAF2FF"/>
+    <rect x="22.5" y="8.3" width="9.2" height="9.2" rx="3" fill="#EAF2FF"/>
+    <rect x="22.5" y="22.5" width="9.2" height="9.2" rx="3" fill="#0F172A"/>
+    <circle cx="12.9" cy="27.1" r="1.55" fill="#2563EB"/>
+    <circle cx="27.1" cy="12.9" r="1.55" fill="#2563EB"/>
+  </g>
+  <text x="56" y="31" fill="#0F172A" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" letter-spacing="0">Nearboards</text>
+</svg>

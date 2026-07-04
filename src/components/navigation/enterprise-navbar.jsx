@@ -12,6 +12,7 @@ import {
   UserCircle2,
   X,
 } from "lucide-react";
+import { NearboardsLogo } from "@/components/brand/nearboards-logo";
 import { Button } from "@/components/ui/button";
 import {
   clearStoredAccessToken,
@@ -25,19 +26,10 @@ import {
   subscribeCurrentUser,
 } from "@/lib/current-user-store";
 import { cn } from "@/lib/utils";
-
-/* ─────────────────────────────────────────────
-   CONSTANTS — unchanged from original
-───────────────────────────────────────────── */
-
 const BASE_NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/features" },
 ];
-
-/* ─────────────────────────────────────────────
-   HELPERS — unchanged from original
-───────────────────────────────────────────── */
 
 function isItemActive(pathname, href) {
   if (href === "/") {
@@ -49,18 +41,6 @@ function isItemActive(pathname, href) {
 function getCircleLabel(user) {
   const rawName = user?.name?.trim() || user?.email?.trim() || "U";
   return rawName.charAt(0).toUpperCase();
-}
-
-/* ─────────────────────────────────────────────
-   BRAND MARK — self-contained, no icon dep
-───────────────────────────────────────────── */
-
-function BrandMark() {
-  return (
-    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[7px] bg-foreground">
-      <div className="h-[10px] w-[10px] rounded-[2.5px] border-[2px] border-white/88" />
-    </div>
-  );
 }
 
 /* ─────────────────────────────────────────────
@@ -192,13 +172,10 @@ export function EnterpriseNavbar() {
           }}
           className="group inline-flex flex-shrink-0 items-center gap-2 rounded-[10px] px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-card-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
         >
-          <BrandMark />
-          <span
-            className="text-[15px] tracking-[-0.3px] text-foreground"
-            style={{ fontFamily: "var(--font-serif, Georgia, serif)", fontWeight: 400 }}
-          >
-            Nearboards
-          </span>
+          <NearboardsLogo
+            markClassName="h-7 w-7"
+            wordmarkClassName="text-[15px]"
+          />
         </Link>
 
         {/* ── Desktop nav pills ── */}
