@@ -40,8 +40,10 @@ function getVisibilityInfo(item, peopleById) {
     .filter(Boolean);
 
   if (!names.length) {
+    const peopleLabel = item.audienceIds.length === 1 ? "person" : "people";
+
     return {
-      label: `Only ${item.audienceIds.length} people`,
+      label: `Only ${item.audienceIds.length} ${peopleLabel}`,
       detail: "Visible only to selected users",
       icon: Users2,
       variant: "accent",
@@ -65,6 +67,7 @@ export function BoardItemCard({
   person,
   peopleById,
   viewerActorId,
+  actions,
   children,
 }) {
   const visibility = getVisibilityInfo(item, peopleById);
@@ -73,21 +76,22 @@ export function BoardItemCard({
   const viewerId = getIdKey(viewerActorId);
 
   return (
-    <Card className="group rounded-[22px] border-line/85 bg-card-strong p-4 shadow-[0_12px_30px_rgba(15,23,42,0.045)] transition duration-200 hover:-translate-y-0.5 hover:border-accent-border/70 hover:shadow-[0_18px_38px_rgba(15,23,42,0.075)] sm:p-5">
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
+    <Card className="group overflow-hidden rounded-2xl border-line/80 bg-card-strong shadow-[0_8px_24px_rgba(15,23,42,0.045)] transition duration-200 hover:border-accent-border/70 hover:shadow-[0_14px_32px_rgba(15,23,42,0.065)]">
+      <div className="p-3 sm:p-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-2.5">
             <div
               className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-[12px] font-semibold text-white shadow-sm ring-1 ring-white/35",
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-[11px] font-semibold text-white shadow-sm ring-1 ring-white/35",
                 person.accent,
               )}
             >
               {getInitials(person.name)}
             </div>
+
             <div className="min-w-0 pt-0.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="truncate text-sm font-semibold leading-none tracking-tight text-foreground">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+                <p className="max-w-full truncate text-sm font-semibold leading-5 tracking-tight text-foreground">
                   {person.name}
                 </p>
                 {viewerId && senderId === viewerId && (
@@ -95,9 +99,10 @@ export function BoardItemCard({
                     You
                   </Badge>
                 )}
-              </div>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted">
-                <span className="inline-flex items-center gap-1.5">
+                <span className="hidden text-muted-soft sm:inline" aria-hidden="true">
+                  &bull;
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-muted">
                   <Clock3 className="h-3.5 w-3.5" />
                   {formatTimestamp(item.createdAt)}
                 </span>
@@ -105,21 +110,24 @@ export function BoardItemCard({
             </div>
           </div>
 
-          <div
-            className={cn(
-              "inline-flex max-w-full shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium sm:max-w-[15rem]",
-              visibility.variant === "accent"
-                ? "border-accent-border bg-accent-soft text-accent"
-                : "border-line bg-card-muted text-muted",
-            )}
-            title={visibility.detail}
-          >
-            <VisibilityIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{visibility.label}</span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <div
+              className={cn(
+                "inline-flex max-w-[12rem] items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium",
+                visibility.variant === "accent"
+                  ? "border-accent-border bg-accent-soft text-accent"
+                  : "border-line bg-card-muted text-muted",
+              )}
+              title={visibility.detail}
+            >
+              <VisibilityIcon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{visibility.label}</span>
+            </div>
+            {actions}
           </div>
         </div>
 
-        <div className="space-y-2.5">{children}</div>
+        <div className="mt-2.5 space-y-2">{children}</div>
       </div>
     </Card>
   );

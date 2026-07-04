@@ -1,4 +1,7 @@
+import { useState } from "react";
 import {
+  ChevronDown,
+  ChevronUp,
   Copy,
   Download,
   FileArchive,
@@ -16,6 +19,9 @@ import {
   getStoredAccessToken,
 } from "@/lib/auth-client";
 import { cn, formatFileSize, getFileExtension } from "@/lib/utils";
+
+const COLLAPSED_TEXT_LENGTH = 180;
+const COLLAPSED_LINE_COUNT = 2;
 
 function getFileIcon(mimeType = "") {
   if (mimeType.startsWith("image/")) {
@@ -78,6 +84,16 @@ async function requestAndDownloadSharedFile(file) {
   anchor.click();
 }
 
+function FileIcon({ iconKind, compact }) {
+  const iconClassName = compact ? "h-3.5 w-3.5" : "h-4 w-4";
+
+  if (iconKind === "image") return <FileImage className={iconClassName} />;
+  if (iconKind === "video") return <FileVideo className={iconClassName} />;
+  if (iconKind === "sheet") return <FileSpreadsheet className={iconClassName} />;
+  if (iconKind === "archive") return <FileArchive className={iconClassName} />;
+  return <FileText className={iconClassName} />;
+}
+
 export function ShareItemCard({
   item,
   person,
@@ -85,6 +101,7 @@ export function ShareItemCard({
   viewerActorId,
   onDeleteShare,
 }) {
+  const [isTextExpanded, setIsTextExpanded] = useState(false);
   const canDelete =
     typeof viewerActorId === "string" &&
     viewerActorId.trim().length > 0 &&
@@ -94,6 +111,9 @@ export function ShareItemCard({
   const hasText = Boolean(text);
   const hasFiles = files.length > 0;
   const isMixedPost = hasText && hasFiles;
+  const shouldCollapseText =
+    text.length > COLLAPSED_TEXT_LENGTH ||
+    text.split("\n").length > COLLAPSED_LINE_COUNT;
 
   const handleCopyText = async () => {
     if (!text) {
@@ -117,101 +137,111 @@ export function ShareItemCard({
     }
   };
 
+  const actions = (
+    <div className="flex items-center gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+      {hasText && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={handleCopyText}
+          className="rounded-full text-muted hover:bg-card-muted hover:text-foreground"
+          aria-label="Copy note"
+          title="Copy note"
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+      )}
+      {canDelete && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-full text-muted hover:bg-card-muted hover:text-foreground"
+          onClick={() => onDeleteShare?.(item.id)}
+          aria-label="Delete share"
+          title="Delete share"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <BoardItemCard
       item={item}
       person={person}
       peopleById={peopleById}
       viewerActorId={viewerActorId}
+      actions={actions}
     >
       {hasText && (
         <section
           className={cn(
-            "rounded-2xl border border-line/70 bg-card-muted/45 px-3 py-3",
-            isMixedPost && "pb-2.5",
+            "rounded-xl bg-card-muted/35 px-3 py-2.5 ring-1 ring-line/55",
+            isMixedPost && "mb-0.5",
           )}
         >
-          <p className="whitespace-pre-wrap text-[14px] leading-[1.65] text-foreground/95">
+          <p
+            className={cn(
+              "whitespace-pre-wrap text-[13.5px] leading-6 text-foreground/95",
+              shouldCollapseText &&
+                !isTextExpanded &&
+                "max-h-12 overflow-hidden [mask-image:linear-gradient(to_bottom,black_72%,transparent_100%)]",
+            )}
+          >
             {text}
           </p>
-          <div className="mt-2 flex justify-end">
-            <Button
+          {shouldCollapseText && (
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyText}
-              className="h-7 rounded-full px-2 text-[11px] text-muted hover:bg-card hover:text-foreground"
+              onClick={() => setIsTextExpanded((currentValue) => !currentValue)}
+              className="mt-1 inline-flex items-center rounded-full text-[10px] font-medium leading-none text-accent transition hover:text-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             >
-              <Copy className="h-3 w-3" />
-              Copy
-            </Button>
-          </div>
+              {isTextExpanded ? "Show less" : "Show more"}
+            </button>
+          )}
         </section>
       )}
 
       {hasFiles && (
-        <section className={cn("space-y-2", isMixedPost && "pt-0.5")}>
+        <section className="space-y-1.5">
           {files.map((file, index) => {
             const iconKind = getFileIcon(file.mimeType);
             const fileKey = `${file.id || file.name}-${index}`;
+            const extension = getFileExtension(file.name) || "file";
 
             return (
               <div
                 key={fileKey}
-                className="group flex min-w-0 flex-col gap-2 rounded-2xl border border-line/75 bg-card px-3 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.035)] transition duration-150 hover:border-accent-border/70 hover:bg-card-muted/45 sm:flex-row sm:items-center"
+                className="group/file flex min-w-0 items-center gap-2.5 rounded-xl border border-line/70 bg-card px-2.5 py-2 transition duration-150 hover:border-accent-border/70 hover:bg-card-muted/35"
               >
-                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <div
-                    className={cn(
-                      "flex shrink-0 items-center justify-center rounded-xl border border-accent-border bg-accent-soft text-accent",
-                      isMixedPost ? "h-9 w-9" : "h-10 w-10",
-                    )}
-                  >
-                    {iconKind === "image" && (
-                      <FileImage
-                        className={cn(isMixedPost ? "h-4 w-4" : "h-4.5 w-4.5")}
-                      />
-                    )}
-                    {iconKind === "video" && (
-                      <FileVideo
-                        className={cn(isMixedPost ? "h-4 w-4" : "h-4.5 w-4.5")}
-                      />
-                    )}
-                    {iconKind === "sheet" && (
-                      <FileSpreadsheet
-                        className={cn(isMixedPost ? "h-4 w-4" : "h-4.5 w-4.5")}
-                      />
-                    )}
-                    {iconKind === "archive" && (
-                      <FileArchive
-                        className={cn(isMixedPost ? "h-4 w-4" : "h-4.5 w-4.5")}
-                      />
-                    )}
-                    {iconKind === "document" && (
-                      <FileText
-                        className={cn(isMixedPost ? "h-4 w-4" : "h-4.5 w-4.5")}
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold leading-5 text-foreground">
-                      {file.name}
-                    </p>
-                    <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
-                      <span className="truncate">{formatFileSize(file.size)}</span>
-                      <span aria-hidden>&bull;</span>
-                      <span className="truncate uppercase">
-                        {getFileExtension(file.name) || "file"}
-                      </span>
-                    </p>
-                  </div>
+                <div
+                  className={cn(
+                    "flex shrink-0 items-center justify-center rounded-lg border border-accent-border bg-accent-soft text-accent",
+                    isMixedPost ? "h-8 w-8" : "h-9 w-9",
+                  )}
+                >
+                  <FileIcon iconKind={iconKind} compact={isMixedPost} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold leading-5 text-foreground">
+                    {file.name}
+                  </p>
+                  <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
+                    <span className="truncate">{formatFileSize(file.size)}</span>
+                    <span aria-hidden>&bull;</span>
+                    <span className="truncate uppercase">{extension}</span>
+                  </p>
                 </div>
 
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 shrink-0 rounded-full px-2.5 text-[11px] text-muted hover:bg-card hover:text-foreground sm:self-auto"
+                  className="h-7 shrink-0 rounded-full px-2 text-[11px] text-muted hover:bg-card hover:text-foreground"
                   onClick={() => void handleDownload(file)}
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -222,21 +252,9 @@ export function ShareItemCard({
           })}
         </section>
       )}
-
-      {canDelete && (
-        <section className="flex justify-end border-t border-line/60 pt-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 rounded-full px-2 text-[11px] text-muted hover:bg-card-muted hover:text-foreground"
-            onClick={() => onDeleteShare?.(item.id)}
-          >
-            <Trash2 className="h-3 w-3" />
-            Delete
-          </Button>
-        </section>
-      )}
     </BoardItemCard>
   );
 }
+
+
+
