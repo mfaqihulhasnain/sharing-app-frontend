@@ -4,8 +4,8 @@ import { AuthRouteGuard } from "@/components/auth/auth-route-guard";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata = {
-  title: "Register | Sharing Board",
-  description: "Create your Sharing Board account.",
+  title: "Register | Nearboards",
+  description: "Create your Nearboards account.",
 };
 
 export default function RegisterPage() {
@@ -28,4 +28,5 @@ export default function RegisterPage() {
     </AuthRouteGuard>
   );
 }
+
 

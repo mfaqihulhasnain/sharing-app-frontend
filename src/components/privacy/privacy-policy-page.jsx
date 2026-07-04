@@ -227,7 +227,7 @@ export function PrivacyPolicyPage() {
               </h1>
 
               <p className="mb-6 max-w-xl text-[14px] font-light leading-7 text-muted">
-                This page tells you exactly what Sharing Board does with your
+                This page tells you exactly what Nearboards does with your
                 information — in plain English, with no surprises. We believe
                 privacy should feel like a feature, not fine print.
               </p>
@@ -375,7 +375,7 @@ export function PrivacyPolicyPage() {
           {/* ── SECTION 03 ── */}
           <Section num="03" title="Local network and data storage">
             <BodyText>
-              Sharing Board runs entirely on your local WiFi network. When you
+              Nearboards runs entirely on your local WiFi network. When you
               post an update or attach a file, that data travels only between
               devices connected to the same network — it does not pass through
               the internet or any external server we operate.
@@ -515,7 +515,7 @@ export function PrivacyPolicyPage() {
           {/* ── SECTION 09 ── */}
           <Section num="09" title="Children and age">
             <BodyText>
-              Sharing Board is designed for workplace use by adults. It is not
+              Nearboards is designed for workplace use by adults. It is not
               intended for use by anyone under the age of 16. We do not
               knowingly collect information from children.
             </BodyText>
@@ -568,7 +568,7 @@ export function PrivacyPolicyPage() {
                 not a policy.
               </h2>
               <p className="mx-auto max-w-lg text-[13.5px] font-light leading-7 text-muted">
-                This page reflects how Sharing Board actually works — not just
+                This page reflects how Nearboards actually works — not just
                 what we are legally required to say. Your data stays on your
                 network, under your control, always. That is the only way we
                 have ever built this product and the only way we intend to keep
@@ -582,3 +582,4 @@ export function PrivacyPolicyPage() {
     </div>
   );
 }
+

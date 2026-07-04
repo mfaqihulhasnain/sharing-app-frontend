@@ -20,7 +20,7 @@ export function TopBar({ onlineCount, onQuickUpload }) {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-[1.15rem] font-semibold tracking-tight text-foreground sm:text-[1.35rem]">
-                Sharing Board
+                Nearboards
               </h1>
               <Badge variant="accent" className="hidden sm:inline-flex">
                 Single shared workspace
@@ -60,3 +60,4 @@ export function TopBar({ onlineCount, onQuickUpload }) {
     </Card>
   );
 }
+

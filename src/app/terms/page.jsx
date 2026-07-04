@@ -5,15 +5,15 @@ import { TermsOfServicePage } from "@/components/terms/termscomponent";
 ───────────────────────────────────────────── */
 
 export const metadata = {
-  title: "Terms of Service | Sharing Board",
+  title: "Terms of Service | Nearboards",
   description:
-    "Sharing Board's Terms of Service — written in plain English. Understand what you agree to, what you own, and how this relationship works. Fair, clear, and straightforward.",
+    "Nearboards' Terms of Service — written in plain English. Understand what you agree to, what you own, and how this relationship works. Fair, clear, and straightforward.",
   keywords: [
-    "Sharing Board terms of service",
-    "Sharing Board terms and conditions",
+    "Nearboards terms of service",
+    "Nearboards terms and conditions",
     "local WiFi app terms",
     "team board terms of service",
-    "Sharing Board user agreement",
+    "Nearboards user agreement",
   ],
   alternates: {
     canonical: "/terms",
@@ -23,17 +23,17 @@ export const metadata = {
     follow: true,
   },
   openGraph: {
-    title: "Terms of Service | Sharing Board",
+    title: "Terms of Service | Nearboards",
     description:
-      "Plain-English Terms of Service for Sharing Board — a local WiFi team board. Fair, clear, and written to be actually read.",
+      "Plain-English Terms of Service for Nearboards — a local WiFi team board. Fair, clear, and written to be actually read.",
     type: "website",
     url: "/terms",
   },
   twitter: {
     card: "summary",
-    title: "Terms of Service | Sharing Board",
+    title: "Terms of Service | Nearboards",
     description:
-      "Fair, plain-English Terms of Service for Sharing Board. You own your content. Your data stays on your WiFi. Leave any time.",
+      "Fair, plain-English Terms of Service for Nearboards. You own your content. Your data stays on your WiFi. Leave any time.",
   },
 };
 
@@ -44,9 +44,9 @@ export const metadata = {
 const termsSchema = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "Terms of Service — Sharing Board",
+  name: "Terms of Service — Nearboards",
   description:
-    "Sharing Board's Terms of Service. Sharing Board is a local WiFi team board. This page explains what users agree to, what they own, visibility and sharing rules, account management, and governing law — written in plain English.",
+    "Nearboards' Terms of Service. Nearboards is a local WiFi team board. This page explains what users agree to, what they own, visibility and sharing rules, account management, and governing law — written in plain English.",
   url: "/terms",
   inLanguage: "en",
   dateModified: "2025-01-01",
@@ -84,3 +84,4 @@ export default function TermsPage() {
     </>
   );
 }
+

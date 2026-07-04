@@ -197,7 +197,7 @@ export function EnterpriseNavbar() {
             className="text-[15px] tracking-[-0.3px] text-foreground"
             style={{ fontFamily: "var(--font-serif, Georgia, serif)", fontWeight: 400 }}
           >
-            Sharing Board
+            Nearboards
           </span>
         </Link>
 
@@ -556,3 +556,4 @@ export function EnterpriseNavbar() {
     </header>
   );
 }
+

@@ -5,9 +5,9 @@ import { FeaturesPageClient } from "@/components/features/features-page-client";
 ───────────────────────────────────────────── */
 
 export const metadata = {
-  title: "Features | Sharing Board — Secure Team Collaboration & File Sharing",
+  title: "Features | Nearboards — Secure Team Collaboration & File Sharing",
   description:
-    "Discover how Sharing Board lets teams on the same WiFi share updates, files, and decisions in one live board — with per-post visibility control. Choose to share with everyone on the network or only selected people. No technical setup required.",
+    "Discover how Nearboards lets teams on the same WiFi share updates, files, and decisions in one live board — with per-post visibility control. Choose to share with everyone on the network or only selected people. No technical setup required.",
   keywords: [
     "team collaboration software",
     "secure file sharing for teams",
@@ -24,7 +24,7 @@ export const metadata = {
     canonical: "/features",
   },
   openGraph: {
-    title: "Sharing Board Features — One Place for Every Team Update",
+    title: "Nearboards Features — One Place for Every Team Update",
     description:
       "Replace scattered emails and chat threads with a single calm workspace. Real-time updates, simple visibility control, and file sharing built for every team — not just developers.",
     type: "website",
@@ -32,9 +32,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sharing Board Features",
+    title: "Nearboards Features",
     description:
-      "How Sharing Board helps teams share updates and files with speed, clarity, and trust — in one organised workspace.",
+      "How Nearboards helps teams share updates and files with speed, clarity, and trust — in one organised workspace.",
   },
 };
 
@@ -45,11 +45,11 @@ export const metadata = {
 const softwareApplicationSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Sharing Board",
+  name: "Nearboards",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description:
-    "Sharing Board helps teams share updates and files in one clear workspace with real-time activity and per-post visibility control. Designed for every role — ops, finance, design, legal, and leadership.",
+    "Nearboards helps teams share updates and files in one clear workspace with real-time activity and per-post visibility control. Designed for every role — ops, finance, design, legal, and leadership.",
   url: "/features",
   offers: {
     "@type": "Offer",
@@ -64,15 +64,15 @@ const faqSchema = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Do we need a technical team to set up Sharing Board?",
+      name: "Do we need a technical team to set up Nearboards?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Not at all. Sharing Board is designed for everyday business users. If your team can send an email, they can use this — from day one, with no training or IT support required.",
+        text: "Not at all. Nearboards is designed for everyday business users. If your team can send an email, they can use this — from day one, with no training or IT support required.",
       },
     },
     {
       "@type": "Question",
-      name: "Can we control who sees each update on Sharing Board?",
+      name: "Can we control who sees each update on Nearboards?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "Yes. Every post has a visibility setting — share with everyone, or only specific people. It's one click, per post. No complex permissions setup needed.",
@@ -80,15 +80,15 @@ const faqSchema = {
     },
     {
       "@type": "Question",
-      name: "How is Sharing Board different from Slack or email?",
+      name: "How is Nearboards different from Slack or email?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Group chats show everything to everyone. Sharing Board lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
+        text: "Group chats show everything to everyone. Nearboards lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
       },
     },
     {
       "@type": "Question",
-      name: "Can different departments use Sharing Board together?",
+      name: "Can different departments use Nearboards together?",
       acceptedAnswer: {
         "@type": "Answer",
         text: "No. The board is only accessible to people connected to the same WiFi network. Anyone outside your local network — whether that's another building, a remote worker, or anyone on mobile data — cannot access it.",

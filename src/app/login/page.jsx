@@ -5,8 +5,8 @@ import { AuthRouteGuard } from "@/components/auth/auth-route-guard";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata = {
-  title: "Login | Sharing Board",
-  description: "Sign in to your Sharing Board workspace.",
+  title: "Login | Nearboards",
+  description: "Sign in to your Nearboards workspace.",
 };
 
 export default function LoginPage() {
@@ -31,4 +31,5 @@ export default function LoginPage() {
     </AuthRouteGuard>
   );
 }
+
 

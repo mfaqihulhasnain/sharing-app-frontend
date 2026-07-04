@@ -87,7 +87,7 @@ export function Footer() {
                   fontWeight: 400,
                 }}
               >
-                Sharing Board
+                Nearboards
               </span>
             </Link>
 
@@ -159,7 +159,7 @@ export function Footer() {
 
         <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
           <p className="text-[12px] text-white/32">
-            &copy; {currentYear} Sharing Board. All rights reserved.
+            &copy; {currentYear} Nearboards. All rights reserved.
           </p>
 
           <p className="inline-flex items-center gap-1.5 text-[12px] text-white/28">
@@ -186,3 +186,4 @@ export function Footer() {
     </footer>
   );
 }
+

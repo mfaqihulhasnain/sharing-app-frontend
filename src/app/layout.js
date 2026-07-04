@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Sharing Board",
+  title: "Nearboards",
   description: "A polished local network board for quick text and file sharing.",
 };
 
@@ -33,3 +33,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+

@@ -4,8 +4,8 @@ import { AuthRouteGuard } from "@/components/auth/auth-route-guard";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata = {
-  title: "Forgot Password | Sharing Board",
-  description: "Request a password reset link for your Sharing Board account.",
+  title: "Forgot Password | Nearboards",
+  description: "Request a password reset link for your Nearboards account.",
 };
 
 export default function ForgotPasswordPage() {
@@ -25,3 +25,4 @@ export default function ForgotPasswordPage() {
     </AuthRouteGuard>
   );
 }
+

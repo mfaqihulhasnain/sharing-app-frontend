@@ -157,7 +157,7 @@ const WHO_IS_IT_FOR = [
     tagColor: "bg-amber-50 text-amber-700 border-amber-200",
     title: "Keep up with the pace",
     description:
-      "When things move fast, clarity is everything. Sharing Board gives high-speed teams the speed and structure they need to stay ahead.",
+      "When things move fast, clarity is everything. Nearboards gives high-speed teams the speed and structure they need to stay ahead.",
   },
 ];
 
@@ -211,7 +211,7 @@ const FAQ_ITEMS = [
   {
     question: "Do we need a technical team to set this up?",
     answer:
-      "Not at all. Sharing Board is designed for everyday business users. If your team can send an email, they can use this — from day one, with no training or IT support required.",
+      "Not at all. Nearboards is designed for everyday business users. If your team can send an email, they can use this — from day one, with no training or IT support required.",
   },
   {
     question: "Can we control who sees each update?",
@@ -221,7 +221,7 @@ const FAQ_ITEMS = [
   {
     question: "How is this different from a group chat?",
     answer:
-      "Group chats show everything to everyone. Sharing Board lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
+      "Group chats show everything to everyone. Nearboards lets you decide per post who sees it — the whole network or just selected people. Plus, files stay attached to the post they belong to, so nothing loses context.",
   },
   {
     question: "Can people outside our office see the board?",
@@ -439,7 +439,7 @@ export function FeaturesPageClient() {
                       in sync.
                     </h1>
                     <p className="max-w-lg text-sm sm:text-base font-light leading-7 text-muted">
-                      Sharing Board gives every person on your WiFi a single shared board — where
+                      Nearboards gives every person on your WiFi a single shared board — where
                       updates appear instantly, files stay in context, and every post reaches
                       exactly who it should. No group chats. No scattered messages. Just one clear
                       place for everyone in the room.
@@ -499,7 +499,7 @@ export function FeaturesPageClient() {
               <SectionHeader
                 label="Why it matters"
                 title="Your team is in the same room. But scattered messages mean no one has the full picture."
-                description="When updates go into group chats, private messages, and verbal handoffs, things fall through the cracks. Sharing Board gives everyone on the same WiFi one place to post, read, and act — instantly."
+                description="When updates go into group chats, private messages, and verbal handoffs, things fall through the cracks. Nearboards gives everyone on the same WiFi one place to post, read, and act — instantly."
               />
             </motion.div>
 
@@ -612,7 +612,7 @@ export function FeaturesPageClient() {
                     team.
                   </>
                 }
-                description="There's no learning curve. If you've ever sent a message or shared a file, you already know how to use Sharing Board."
+                description="There's no learning curve. If you've ever sent a message or shared a file, you already know how to use Nearboards."
               />
             </motion.div>
 
@@ -705,7 +705,7 @@ export function FeaturesPageClient() {
           >
             <motion.div variants={fadeUp} transition={{ duration: 0.35 }}>
               <SectionHeader
-                label="Why Sharing Board"
+                label="Why Nearboards"
                 title="The old way costs you more than you realise."
                 description="Every message sent in the wrong place — a group chat, a private message, a verbal update — is a moment of clarity your team never gets back."
               />
@@ -720,7 +720,7 @@ export function FeaturesPageClient() {
               <div className="overflow-hidden rounded-2xl border border-line/85">
                 <div className="flex items-center gap-2 px-5 py-3.5 bg-card-muted/60 border-b border-line/70">
                   <span className="text-base">😩</span>
-                  <span className="text-sm font-medium text-muted">Without Sharing Board</span>
+                  <span className="text-sm font-medium text-muted">Without Nearboards</span>
                 </div>
                 {COMPARISON_ROWS.map((r) => (
                   <div
@@ -736,7 +736,7 @@ export function FeaturesPageClient() {
               <div className="overflow-hidden rounded-2xl border border-line/85 bg-foreground">
                 <div className="flex items-center gap-2 px-5 py-3.5 bg-white/[0.06] border-b border-white/10">
                   <span className="text-base">✦</span>
-                  <span className="text-sm font-medium text-white/80">With Sharing Board</span>
+                  <span className="text-sm font-medium text-white/80">With Nearboards</span>
                 </div>
                 {COMPARISON_ROWS.map((r) => (
                   <div
@@ -811,7 +811,7 @@ export function FeaturesPageClient() {
                   <>
                     Quick answers for anyone evaluating{" "}
                     <em style={{ color: "var(--accent, #1a56f5)", fontStyle: "italic" }}>
-                      Sharing Board.
+                      Nearboards.
                     </em>
                   </>
                 }
@@ -869,7 +869,7 @@ export function FeaturesPageClient() {
 
                 {/* Headline */}
                 <h2 className="font-serif text-[2rem] sm:text-[2.6rem] font-light leading-[1.08] tracking-[-0.06em] text-white">
-                  Give your team the clarity they've been{" "}
+                  Give your team the clarity they&apos;ve been{" "}
                   <em className="italic opacity-60">missing.</em>
                 </h2>
 
@@ -885,7 +885,7 @@ export function FeaturesPageClient() {
                     className="h-11 px-6 text-sm font-medium bg-white text-foreground hover:bg-white/90 shadow-none border-0"
                   >
                     <Link href="/register">
-                      Create your board — it's free
+                      Create your board — it&apos;s free
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -906,3 +906,4 @@ export function FeaturesPageClient() {
     </div>
   );
 }
+

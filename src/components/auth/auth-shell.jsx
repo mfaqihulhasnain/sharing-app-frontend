@@ -42,7 +42,7 @@ export function AuthShell({
                   <Grid2x2Check className="h-5 w-5" />
                 </span>
                 <span className="text-lg font-semibold tracking-tight text-foreground">
-                  Sharing Board
+                  Nearboards
                 </span>
               </Link>
 
@@ -102,7 +102,7 @@ export function AuthShell({
                       <Grid2x2Check className="h-4.5 w-4.5" />
                     </span>
                     <span className="text-base font-semibold tracking-tight text-foreground">
-                      Sharing Board
+                      Nearboards
                     </span>
                   </Link>
                 ) : null}
@@ -139,4 +139,5 @@ export function AuthShell({
     </div>
   );
 }
+
 

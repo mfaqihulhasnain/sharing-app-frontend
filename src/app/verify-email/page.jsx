@@ -12,7 +12,7 @@ function VerifyEmailLoadingState() {
   return (
     <AuthShell
       title="Verify your email"
-      description="We are confirming your account so you can start using Sharing Board."
+      description="We are confirming your account so you can start using Nearboards."
       footer={
         <>
           Back to <Link href="/login">Login</Link>
@@ -79,7 +79,7 @@ function VerifyEmailContent() {
   return (
     <AuthShell
       title="Verify your email"
-      description="We are confirming your account so you can start using Sharing Board."
+      description="We are confirming your account so you can start using Nearboards."
       footer={
         <>
           Back to <Link href="/login">Login</Link>
@@ -123,3 +123,4 @@ export default function VerifyEmailPage() {
     </Suspense>
   );
 }
+

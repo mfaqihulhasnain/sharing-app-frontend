@@ -63,7 +63,7 @@ const GLANCE_ITEMS = [
 ];
 
 const TOC_ITEMS = [
-  { num: "01", label: "Who can use Sharing Board" },
+  { num: "01", label: "Who can use Nearboards" },
   { num: "02", label: "Your account" },
   { num: "03", label: "What you can do on the board" },
   { num: "04", label: "What you cannot do" },
@@ -330,9 +330,9 @@ export function TermsOfServicePage() {
               <div className="space-y-6">
 
                 {/* 01 */}
-                <Section num="01" title="Who can use Sharing Board">
+                <Section num="01" title="Who can use Nearboards">
                   <BodyText>
-                    Sharing Board is designed for{" "}
+                    Nearboards is designed for{" "}
                     <strong className="font-medium text-foreground">
                       workplace use by adults aged 16 and over
                     </strong>
@@ -346,7 +346,7 @@ export function TermsOfServicePage() {
                     your Google account. Either way, the same terms apply.
                   </BodyText>
                   <Callout variant="blue" icon={Info}>
-                    Sharing Board is a workplace tool. It is not designed for
+                    Nearboards is a workplace tool. It is not designed for
                     personal or consumer use outside of a team context.
                   </Callout>
                 </Section>
@@ -425,7 +425,7 @@ export function TermsOfServicePage() {
                     never will.
                   </BodyText>
                   <BodyText>
-                    By posting content, you grant Sharing Board only the limited
+                    By posting content, you grant Nearboards only the limited
                     technical permission needed to display it to the people you
                     choose. We do not use your content for any other purpose.
                   </BodyText>
@@ -468,7 +468,7 @@ export function TermsOfServicePage() {
                 <Section num="07" title="Google sign-in">
                   <BodyText>
                     If you sign in with Google, you are also agreeing to
-                    Google's own Terms of Service and Privacy Policy. We only
+                    Google&apos;s own Terms of Service and Privacy Policy. We only
                     receive your name and email address from Google — nothing
                     else.
                   </BodyText>
@@ -489,7 +489,7 @@ export function TermsOfServicePage() {
                   title="The service as it is — honest and upfront"
                 >
                   <BodyText>
-                    We work hard to keep Sharing Board reliable. But like any
+                    We work hard to keep Nearboards reliable. But like any
                     software, it may occasionally be unavailable due to
                     maintenance or unexpected issues. We do not guarantee 100%
                     uptime.
@@ -533,7 +533,7 @@ export function TermsOfServicePage() {
                     board or by email — before the changes take effect.
                   </BodyText>
                   <BodyText>
-                    Continuing to use Sharing Board after a change means you
+                    Continuing to use Nearboards after a change means you
                     accept the updated terms. If you disagree, you can always
                     delete your account before it takes effect.
                   </BodyText>
@@ -548,7 +548,7 @@ export function TermsOfServicePage() {
                 <Section num="11" title="Governing law">
                   <BodyText>
                     These terms are governed by the laws of the jurisdiction in
-                    which Sharing Board is registered. We keep this section
+                    which Nearboards is registered. We keep this section
                     short because we would always rather resolve any issue by
                     talking directly than through legal processes.
                   </BodyText>
@@ -604,3 +604,5 @@ export function TermsOfServicePage() {
     </div>
   );
 }
+
+
