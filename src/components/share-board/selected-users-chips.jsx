@@ -13,19 +13,30 @@ export function SelectedUsersChips({
     return (
       <div
         className={cn(
-          "flex items-center gap-1.5 rounded-full border border-dashed border-line bg-card-muted/80 px-3 py-1.5 text-xs text-muted",
+          "flex min-w-0 items-center gap-2 rounded-2xl border border-dashed border-line bg-card-muted/65 px-3 py-2 text-xs text-muted",
           className,
         )}
       >
-        <Globe2 className="h-3.5 w-3.5 text-accent" />
-        Visible to: Everyone
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card text-accent shadow-sm">
+          <Globe2 className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate">
+          Visible to <span className="font-semibold text-foreground">everyone</span>
+        </span>
       </div>
     );
   }
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
-      <span className="text-xs font-medium text-foreground">Visible to:</span>
+    <div
+      className={cn(
+        "flex min-w-0 flex-wrap items-center gap-1.5 rounded-2xl border border-line bg-card-muted/55 px-2.5 py-2",
+        className,
+      )}
+    >
+      <span className="mr-0.5 text-xs font-semibold text-foreground">
+        Visible to
+      </span>
       <AnimatePresence initial={false}>
         {selectedUsers.map((user) => (
           <motion.button
@@ -36,10 +47,10 @@ export function SelectedUsersChips({
             exit={{ opacity: 0, scale: 0.92 }}
             type="button"
             onClick={() => onRemoveUser(user.id)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent-border bg-soft-blue px-2.5 py-1 text-xs font-medium text-accent transition hover:bg-soft-blue/80"
+            className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-accent-border bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent transition hover:bg-accent-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
           >
-            <span>{user.name}</span>
-            <X className="h-3 w-3" />
+            <span className="truncate">{user.name}</span>
+            <X className="h-3 w-3 shrink-0" />
           </motion.button>
         ))}
       </AnimatePresence>
@@ -47,7 +58,7 @@ export function SelectedUsersChips({
         variant="ghost"
         size="sm"
         onClick={onClear}
-        className="h-6 rounded-md px-1.5 text-xs text-muted"
+        className="ml-auto h-7 rounded-full px-2 text-xs text-muted hover:text-foreground"
       >
         Clear
       </Button>

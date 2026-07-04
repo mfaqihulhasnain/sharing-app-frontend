@@ -320,18 +320,17 @@ export function ShareComposer({
     <Card
       id="share-composer"
       className={cn(
-        "relative overflow-hidden rounded-2xl border-line/90 bg-card-strong shadow-[0_12px_24px_rgba(15,23,42,0.04)]",
-        isDragActive && "ring-2 ring-accent/15",
+        "relative overflow-hidden rounded-[28px] border-line/90 bg-card-strong shadow-[0_20px_50px_rgba(15,23,42,0.08)]",
+        isDragActive && "border-accent-border ring-2 ring-accent/15",
       )}
     >
-      <div className="pointer-events-none absolute right-0 top-0 h-36 w-36 rounded-full bg-[radial-gradient(circle,_var(--accent-soft),_transparent_70%)]" />
-      <CardHeader className="relative gap-2 p-4 pb-2 sm:p-5 sm:pb-2">
-        <div className="flex flex-wrap items-start justify-between gap-2.5">
-          <div className="space-y-0.5">
-            <CardTitle className="text-base sm:text-[1.03rem]">
+      <CardHeader className="relative gap-3 border-b border-line/70 bg-card-muted/25 p-4 pb-3 sm:p-5 sm:pb-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <CardTitle className="text-base font-semibold tracking-tight sm:text-lg">
               Share to the board
             </CardTitle>
-            <CardDescription className="text-xs leading-5">
+            <CardDescription className="max-w-xl text-xs leading-5">
               Post once, pick visibility, and keep everything in one shared flow.
             </CardDescription>
           </div>
@@ -339,11 +338,11 @@ export function ShareComposer({
           <button
             type="button"
             onClick={onOpenAudience}
-            className="group inline-flex items-center gap-1.5 rounded-full border border-line bg-card-muted px-3 py-1.5 text-xs text-muted transition hover:border-accent-border hover:bg-accent-soft/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+            className="group inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs text-muted shadow-sm transition hover:border-accent-border hover:bg-accent-soft/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
             aria-label="Open audience controls"
           >
             <UsersRound className="h-3.5 w-3.5 text-accent" />
-            <span>
+            <span className="truncate">
               Visible to{" "}
               <span className="font-medium text-foreground">
                 {getAudienceLabel(selectedUserIds, peopleById)}
@@ -353,19 +352,19 @@ export function ShareComposer({
         </div>
       </CardHeader>
 
-      <CardContent className="relative space-y-3 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
+      <CardContent className="relative space-y-3.5 px-4 pb-4 pt-4 sm:px-5 sm:pb-5">
         <SelectedUsersChips
           selectedUsers={selectedUsers}
           onRemoveUser={onRemoveAudienceUser}
           onClear={onClearAudience}
-          className="min-h-8"
+          className="min-h-9"
         />
 
         <div
           {...getRootProps()}
           className={cn(
-            "rounded-2xl border border-dashed border-line/80 bg-card-muted/65 p-2.5 transition-[border-color,background-color,box-shadow] duration-150",
-            isDragActive && "border-accent bg-soft-blue/70 shadow-sm",
+            "rounded-[22px] border border-dashed border-line/80 bg-card-muted/55 p-2.5 shadow-inner shadow-slate-200/35 transition-[border-color,background-color,box-shadow] duration-150",
+            isDragActive && "border-accent bg-soft-blue/70 shadow-[inset_0_0_0_1px_var(--accent-border)]",
           )}
         >
           <input {...getInputProps()} />
@@ -382,11 +381,11 @@ export function ShareComposer({
             }}
             placeholder="Share an update, note, or file handoff..."
             aria-label="Message and file note composer"
-            className="min-h-[86px] rounded-xl border-line/90 bg-card/95 px-3.5 py-2.5 text-sm leading-6 shadow-none transition-[border-color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-accent/15"
+            className="min-h-[108px] rounded-2xl border-line/90 bg-card/95 px-3.5 py-3 text-sm leading-6 shadow-none transition-[border-color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-accent/15"
           />
 
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line/80 px-1 pt-2">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-line/80 px-1 pt-2.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
               <UploadCloud className="h-3.5 w-3.5 text-accent" />
               {isDragActive
                 ? "Release to add files."
@@ -399,7 +398,7 @@ export function ShareComposer({
                 variant="outline"
                 size="sm"
                 onClick={open}
-                className="h-8"
+                className="h-9 rounded-full px-3"
               >
                 <Paperclip className="h-3.5 w-3.5" />
                 Attach
@@ -409,7 +408,7 @@ export function ShareComposer({
                 size="sm"
                 onClick={onSubmit}
                 disabled={isSharing || !hasShareContent}
-                className="h-8 px-3.5"
+                className="h-9 rounded-full px-4"
               >
                 <SendHorizonal className="h-3.5 w-3.5" />
                 {isSharing ? "Sharing..." : "Share now"}
@@ -424,18 +423,18 @@ export function ShareComposer({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="space-y-1.5 pt-0.5"
+              className="space-y-2 rounded-[20px] border border-line/70 bg-card-muted/35 p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] font-medium text-muted">Attached files</p>
+                <p className="text-xs font-semibold tracking-tight text-foreground">Attached files</p>
                 <div className="flex items-center gap-3">
                   <p className="inline-flex items-center gap-1.5 text-[11px] text-muted">
-                    <span>
+                    <span className="truncate">
                       {attachments.length} file
                       {attachments.length === 1 ? "" : "s"}
                     </span>
                     <span aria-hidden>&bull;</span>
-                    <span>{formatFileSize(totalAttachmentSize)}</span>
+                    <span className="truncate">{formatFileSize(totalAttachmentSize)}</span>
                   </p>
                   <Button
                     type="button"
@@ -449,7 +448,7 @@ export function ShareComposer({
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {attachments.map((file) => {
                   const kind = getAttachmentKind(file);
                   const extension = getAttachmentExtension(file.name);
@@ -468,10 +467,10 @@ export function ShareComposer({
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      className="group flex w-full items-center gap-2.5 rounded-lg border border-line/75 bg-card-muted/40 px-2.5 py-2 transition duration-150 hover:border-line hover:bg-card-muted/65 sm:w-[calc(50%-0.1875rem)]"
+                      className="group flex min-w-0 items-center gap-2.5 rounded-2xl border border-line/75 bg-card-strong/90 px-2.5 py-2.5 shadow-[0_8px_18px_rgba(15,23,42,0.035)] transition duration-150 hover:border-accent-border/70 hover:bg-card"
                     >
                       {hasImagePreview ? (
-                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-line/70 bg-card">
+                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-line/70 bg-card">
                           <Image
                             src={imagePreviewSrc}
                             alt={file.name}
@@ -485,7 +484,7 @@ export function ShareComposer({
                       ) : (
                         <div
                           className={cn(
-                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-md border",
+                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
                             tileClass,
                           )}
                         >
@@ -504,7 +503,7 @@ export function ShareComposer({
                           {file.name}
                         </p>
                         <div className="flex items-center gap-1.5 text-[10.5px] text-muted">
-                          <span>{formatFileSize(file.size)}</span>
+                          <span className="truncate">{formatFileSize(file.size)}</span>
                           <span aria-hidden>&bull;</span>
                           <span
                             className={cn(
@@ -520,7 +519,7 @@ export function ShareComposer({
                       <button
                         type="button"
                         onClick={() => onRemoveFile(file.id)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted transition duration-150 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition duration-150 hover:bg-card-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
                         aria-label={`Remove ${file.name}`}
                         title={`Remove ${file.name}`}
                       >
@@ -537,3 +536,4 @@ export function ShareComposer({
     </Card>
   );
 }
+

@@ -666,27 +666,26 @@ export function ShareBoardShell() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-3 sm:px-5 lg:px-6">
+    <div className="relative min-h-screen overflow-hidden px-3 py-3 sm:px-5 lg:px-6">
       <div className="pointer-events-none absolute inset-0">
         <div
-          className="absolute -left-32 top-28 h-64 w-64 rounded-full blur-3xl"
+          className="absolute -left-32 top-28 h-64 w-64 rounded-full blur-3xl opacity-80"
           style={{ background: "var(--bg-orb-1)" }}
         />
         <div
-          className="absolute -right-24 top-40 h-64 w-64 rounded-full blur-3xl"
+          className="absolute -right-24 top-40 h-64 w-64 rounded-full blur-3xl opacity-70"
           style={{ background: "var(--bg-orb-2)" }}
         />
         <div
-          className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full blur-3xl"
+          className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full blur-3xl opacity-60"
           style={{ background: "var(--bg-orb-3)" }}
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-330 flex-col gap-4">
+      <div className="relative mx-auto flex w-full max-w-330 flex-col gap-4 sm:gap-5">
         <EnterpriseNavbar />
-
-        <main className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
-          <div className="space-y-3.5">
+        <main className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+          <div className="space-y-4">
             <div ref={composerRef}>
               <ShareComposer
                 draftText={draftText}
@@ -733,3 +732,13 @@ export function ShareBoardShell() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
